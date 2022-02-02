@@ -1,5 +1,7 @@
 package BipoleI.lib;
 
+import BipoleI.BattlePanel;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -8,7 +10,11 @@ public abstract class Unit implements Tile {
     /** THis unit's display name. **/
     public abstract String name();
 
-    /** Team ID this tile belongs to. 0 = ally owned, 1+ - enemy team or teams, **/
+    /** The map that this unit is on. Used to get coordinates from the map 2D array,
+     * which are not stored in this object for some reason. **/
+    private final Map map;
+
+    /** Team this tile belongs to. **/
     private final Team team;
 
     /** Cost in points to purchase this unit. **/
@@ -29,13 +35,22 @@ public abstract class Unit implements Tile {
     /** If true, this unit automatically acts when it is ready. **/
     private boolean autoAct;
 
+    /** The BattlePanel that this Unit is on the map of.
+     * If null, then some display stuff wont be shown but the unit can still exist without being in a panel.
+     */
+    private BattlePanel panel;
+
     /** The timer that controls when this unit is ready to act. **/
     private Timer readinessTimer;
+
+    /** Milliseconds since this unit started to become ready. (Only really used in displaying) **/
+    private long readyStartMillis;
 
     /** Whether or not this unit is currently ready to attack/act. Set to true when readinessTimer is up. **/
     private boolean ready;
 
-    public Unit(Team team, int cost, int hp, int atk, int delay, boolean canAttack, boolean autoAct){
+    public Unit(Map map, Team team, int cost, int hp, int atk, int delay, boolean canAttack, boolean autoAct){
+        this.map = map;
         this.team = team;
         this.cost = cost;
         this.hp = hp;
@@ -44,20 +59,24 @@ public abstract class Unit implements Tile {
         this.canAttack = canAttack;
         this.autoAct = autoAct;
     }
-    public Unit(Team team, int cost, int hp, int atk, int delay, boolean canAttack){
-        this(team, cost, hp, atk, delay, canAttack, false);
+    public Unit(Map map, Team team, int cost, int hp, int atk, int delay, boolean canAttack){
+        this(map, team, cost, hp, atk, delay, canAttack, false);
     }
-    public Unit(Team team, int cost, int hp, int atk, int delay){
-        this(team, cost, hp, atk, delay, true, false);
+    public Unit(Map map, Team team, int cost, int hp, int atk, int delay){
+        this(map, team, cost, hp, atk, delay, true, false);
     }
-    public Unit(Team team, int cost, int hp, int atk){
-        this(team, cost, hp, atk, 0, false, false);
+    public Unit(Map map, Team team, int cost, int hp, int atk){
+        this(map, team, cost, hp, atk, 0, false, false);
     }
-    public Unit(Team team, int cost, int hp){
-        this(team, cost, hp, 0, 0, false, false);
+    public Unit(Map map, Team team, int cost, int hp){
+        this(map, team, cost, hp, 0, 0, false, false);
+    }
+    public Unit(Map map, Team team) {
+        this.team = team;
+        this.map = map;
     }
 
-    // General
+    // ================ TIMING
     /** Run when this unit is bought/placed. Starts the readiness timer. **/
     public void place(){
         // Start readiness timer if this unit can attack or auto act.
@@ -65,6 +84,7 @@ public abstract class Unit implements Tile {
             ActionListener onReadyAction = evt -> onReady();
             readinessTimer = new Timer(delay, onReadyAction);
             readinessTimer.setRepeats(autoAct);
+            readyStartMillis = System.currentTimeMillis();
             startReadinessTimer();
         }
     }
@@ -80,6 +100,7 @@ public abstract class Unit implements Tile {
     public void onReady(){
         if (autoAct){
             autoAct();
+            readyStartMillis = System.currentTimeMillis();
         } else {
             ready = true;
         }
@@ -89,8 +110,33 @@ public abstract class Unit implements Tile {
     /** If this unit has an auto-act, this is what is run when it auto acts. **/
     public void autoAct(){}
 
-    // Display
+    /** Percentage that this unit is ready. **/
+    public double readinessPercent(){
+        if (readinessTimer == null) return 1.0;
+        return (double)(System.currentTimeMillis() - readyStartMillis) / readinessTimer.getDelay();
+    }
+
+    // ================ RENDERING
     public abstract void draw(Graphics g, int x, int y, int z, boolean brighter);
+
+    public void drawUI(Graphics g, int x, int y, int z, boolean brighter){
+        y += (int)(z*0.75);
+        if (readinessTimer != null){
+            if (readinessTimer.isRunning()){
+                int width = z;
+                int height = (int)(z*0.1);
+                int hw = width/2;
+                int hh = height/2;
+                int barWidth = (int)(z*readinessPercent());
+
+                g.setColor(BattlePanel.BAR_BACKGROUND_COLOR);
+                g.fillRect(x-hw, y-hh, width, height);
+
+                g.setColor(BattlePanel.READINESS_COLOR);
+                g.fillRect(x-hw, y-hh, barWidth, height);
+            }
+        }
+    }
 
     @Override
     public void drawGridTile(Graphics g, int x, int y, int z, boolean brighter) {
@@ -118,6 +164,44 @@ public abstract class Unit implements Tile {
         g.drawPolygon(xPoints, yPoints, 4);
     }
 
+    // ================ GENERAL
+    /** This tile generates points. Creates a popup if a BattlePanel panel is defined for this unit via setPanel(). **/
+    public void generatePoints(int amount){
+        team.addPoints(amount);
+        floatingTextHere("+"+amount, team.getPointColor());
+    }
+
+    /** Get the X and Y coordinates of this unit on the map it is on. Null if not on map. **/
+    public IntPoint getMapPosition(){
+        for (int c=0; c<map.numCols(); c++){
+            for (int r=0; r<map.numRows(); r++){
+                if (map.getTile(c, r) == this){
+                    return new IntPoint(c, r);
+                }
+            }
+        }
+        System.out.println("pos not found...");
+        return null;
+    }
+
+    // ================ FLOATING TEXT
+    /** Summon  a floating text on this unit. **/
+    public void floatingTextHere(String text, Color color, int duration){
+        if (panel == null) return;
+        IntPoint pos = getMapPosition();
+        if (pos == null) return;
+
+        FloatingText floatingText = new FloatingText(pos.getX(), pos.getY(), text, color, duration);
+        panel.addFloatingText(floatingText);
+    }
+    public void floatingTextHere(String text, Color color){
+        floatingTextHere(text, color, 1000);
+    }
+
+    public Map getMap() {
+        return map;
+    }
+
     public Team getTeam() {
         return team;
     }
@@ -140,5 +224,13 @@ public abstract class Unit implements Tile {
 
     public boolean isAutoAct() {
         return autoAct;
+    }
+
+    public BattlePanel getPanel() {
+        return panel;
+    }
+
+    public void setPanel(BattlePanel panel) {
+        this.panel = panel;
     }
 }

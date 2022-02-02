@@ -6,6 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 // Bipole I's camera uses 2d rendering but displays them in orthographic ways to simulate 3D.
 // Maybe an actual 3d bipole game with a 3d engine from scratch later but too confusing for now.
@@ -14,6 +15,8 @@ public class BattlePanel extends JPanel {
     // CONSTANTS
     public static final Color NEUTRAL_COLOR = new Color(200,200,200);
     public static final Color CURSOR_COLOR = new Color(110, 195, 45);
+    public static final Color READINESS_COLOR = new Color(220,195,70);
+    public static final Color BAR_BACKGROUND_COLOR = new Color(30, 30, 30);
     public static final Font GAME_FONT = new Font("monospace", Font.PLAIN, 20);
 
     /** Currently selected unit by column and row. **/
@@ -25,7 +28,7 @@ public class BattlePanel extends JPanel {
     private float cursorViewRow = 0.0f;
 
     /** Current camera X and Y position (relative to columns and rows, but can be in between) **/
-    private float viewCol = 3.5f;
+    private float viewCol = 2.0f;
     private float viewRow = 3.5f;
 
     /** Current zoom amount (1 tile = 1 square's total bounding box size (not its actual side length)) **/
@@ -44,8 +47,11 @@ public class BattlePanel extends JPanel {
     /** Label that displays current point count. **/
     private JLabel pointsLabel;
 
+    /** List of floating number (popups) above tiles, for damage, point generation, etc. **/
+    private ArrayList<FloatingText> floatingTexts;
+
     public BattlePanel(){
-        zoom = 64.0f;
+        zoom = 48.0f;
         z = (int)zoom;   // zoom size in pixels
         hz = (int)(zoom/2);   // half of zoom size in pixels
 
@@ -60,7 +66,7 @@ public class BattlePanel extends JPanel {
 
         // Screen refresher
         ActionListener updateScreen = evt -> repaint();
-        screenUpdater = new Timer(50, updateScreen); screenUpdater.start();
+        screenUpdater = new Timer(20, updateScreen); screenUpdater.start();
 
         // Setup Swing component layout
         GroupLayout layout = new GroupLayout(this);
@@ -72,7 +78,7 @@ public class BattlePanel extends JPanel {
         add(pointsLabel, BorderLayout.LINE_START);
         pointsLabel.setSize(300, 100);
         pointsLabel.setFont(GAME_FONT);
-        pointsLabel.setForeground(NEUTRAL_COLOR);
+        pointsLabel.setForeground(CURSOR_COLOR);
 
         layout.setHorizontalGroup(
                 layout.createSequentialGroup()
@@ -83,33 +89,12 @@ public class BattlePanel extends JPanel {
                 layout.createSequentialGroup()
                         .addComponent(pointsLabel)
         );
+
+        // initialize floating texts
+        floatingTexts = new ArrayList<>();
     }
 
-    public class CursorUp extends AbstractAction{
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (cursorRow > 0) { cursorRow--; cursorViewRow--; }
-        }
-    }
-    public class CursorDown extends AbstractAction{
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (cursorRow < battle.getMap().numRows()-1) { cursorRow++; cursorViewRow++; }
-        }
-    }
-    public class CursorLeft extends AbstractAction{
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (cursorCol > 0) { cursorCol--; cursorViewCol--; }
-        }
-    }
-    public class CursorRight extends AbstractAction{
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (cursorCol < battle.getMap().numCols()-1) { cursorCol++; cursorViewCol++; }
-        }
-    }
-
+    // RENDERING
     @Override
     public void paintComponent(Graphics g){
         super.paintComponent(g);
@@ -159,6 +144,20 @@ public class BattlePanel extends JPanel {
                 }
             }
         }
+
+        // Draw UI for units (After unit is drawn, but before floating texts)
+        for (int c=0; c<battle.getMap().numCols(); c++){
+            for (int r=0; r<battle.getMap().numRows(); r++){
+                Tile tile = battle.getMap().getTile(c, r);
+                if (tile != null){
+                    IntPoint pos = tileScreenPos(c, r);
+                    tile.drawUI(g, pos.getX(), pos.getY(), z, c==cursorCol && r==cursorRow);
+                }
+            }
+        }
+
+        // Draw floating texts (damage, gold generation, etc.)
+        drawFloatingTexts(g);
     }
 
     public void drawTile(Graphics g, int c, int r){
@@ -191,11 +190,29 @@ public class BattlePanel extends JPanel {
         );
     }
 
-    public void setBattle(Battle battle){
-        this.battle = battle;
+    // ================ UNIT OVERLAY STATS
+
+
+    // ================ FLOATING TEXT
+    public void addFloatingText(FloatingText floatingText){
+        floatingTexts.add(floatingText);
     }
 
-    // Camera
+    /** Draw floating texts, and also delete expired ones. **/
+    public void drawFloatingTexts(Graphics g){
+        int i = 0;
+        while (i<floatingTexts.size()){
+            FloatingText floatingText = floatingTexts.get(i);
+            if (floatingText.expired()){
+                floatingTexts.remove(i);
+            } else {
+                floatingText.draw(this, g, z);
+                i++;
+            }
+        }
+    }
+
+    // ================ POSITIONING
     /** Get the screen position of the upper-left square of the specified tile **/
     public IntPoint tileScreenPos(int c, int r){
         return new IntPoint(
@@ -211,7 +228,7 @@ public class BattlePanel extends JPanel {
     }
 
 
-    // Shapes
+    // ================ SHAPE DRAWING
     public static void drawRectPrism(Graphics g, int x, int y, int z, Team team,
                                      int width, int length, int height, boolean brighter, boolean hideBottomFace){
         int hz = z/2;
@@ -323,14 +340,36 @@ public class BattlePanel extends JPanel {
         drawTriangularPrism(g, x, y, z, team, width, length, height, brighter, false);
     }
 
-//    public float getZoom() {
-//        return zoom;
-//    }
-//    public int getZ() {
-//        return z;
-//    }
-//    public int getHz() {
-//        return hz;
-//    }
+    // CONTROLS
+    public class CursorUp extends AbstractAction{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (cursorRow > 0) { cursorRow--; cursorViewRow--; }
+        }
+    }
+    public class CursorDown extends AbstractAction{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (cursorRow < battle.getMap().numRows()-1) { cursorRow++; cursorViewRow++; }
+        }
+    }
+    public class CursorLeft extends AbstractAction{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (cursorCol > 0) { cursorCol--; cursorViewCol--; }
+        }
+    }
+    public class CursorRight extends AbstractAction{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (cursorCol < battle.getMap().numCols()-1) { cursorCol++; cursorViewCol++; }
+        }
+    }
+
+    // ================ ACCESSORS & SETTERS
+    public void setBattle(Battle battle){
+        this.battle = battle;
+        battle.setPanel(this);
+    }
 }
 

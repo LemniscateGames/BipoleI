@@ -1,9 +1,6 @@
 package BipoleI;
 
-import BipoleI.lib.Battle;
-import BipoleI.lib.EmptyTile;
-import BipoleI.lib.Map;
-import BipoleI.lib.Team;
+import BipoleI.lib.*;
 import BipoleI.lib.units.Castle;
 import BipoleI.lib.units.Farmer;
 import BipoleI.lib.units.Soldier;
@@ -23,20 +20,20 @@ public class BipoleI {
         Team enemies = new Team(1);
 
         for (int i=0; i<5; i++){
-            map.placeUnit(i, i, new EmptyTile(allies));
+            map.placeUnit(i, i, new EmptyTile(map, allies));
         }
 
         for (int i=0; i<5; i++){
-            map.placeUnit(7-i, i, new EmptyTile(enemies));
+            map.placeUnit(7-i, i, new EmptyTile(map, enemies));
         }
 
-        map.placeUnit(7,7, new Castle(allies));
-        map.placeUnit(6, 6, new Soldier(allies));
-        map.placeUnit(7, 5, new Farmer(allies));
+        map.placeUnit(7,7, new Castle(map, allies));
+        map.placeUnit(6, 6, new Soldier(map, allies));
+        map.placeUnit(7, 5, new Farmer(map, allies));
 
-        map.placeUnit(0,7, new Castle(enemies));
-        map.placeUnit(1, 6, new Soldier(enemies));
-        map.placeUnit(0, 5, new Farmer(enemies));
+        map.placeUnit(0,7, new Castle(map, enemies));
+        map.placeUnit(1, 6, new Soldier(map, enemies));
+        map.placeUnit(0, 5, new Farmer(map, enemies));
 
         ArrayList<Team> teams = new ArrayList<>();
         teams.add(allies);

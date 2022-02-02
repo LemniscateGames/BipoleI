@@ -1,6 +1,7 @@
 package BipoleI.lib.units;
 
 import BipoleI.BattlePanel;
+import BipoleI.lib.Map;
 import BipoleI.lib.Team;
 import BipoleI.lib.Unit;
 
@@ -10,13 +11,13 @@ import java.awt.*;
 public class Castle extends Unit {
     public String name() { return "Castle"; }
 
-    public Castle(Team team) {
-        super(team,0, 25, 0, 5000, false, true);
+    public Castle(Map map, Team team) {
+        super(map, team,0, 25, 0, 5000, false, true);
     }
 
     @Override
     public void autoAct() {
-        getTeam().addPoints(1);
+        generatePoints(1);
     }
 
     @Override

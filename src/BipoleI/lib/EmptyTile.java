@@ -5,8 +5,8 @@ import java.awt.*;
 public class EmptyTile extends Unit {
     public String name() { return "Empty Tile"; }
 
-    public EmptyTile(Team team) {
-        super(team,1, 1, 0, 0, false);
+    public EmptyTile(Map map, Team team) {
+        super(map, team,1, 1, 0, 0, false);
     }
 
     @Override

@@ -9,4 +9,7 @@ public interface Tile {
 
     /** Draw this tile's unit. Drawn after the cursor is drawn. **/
     void draw(Graphics g, int x, int y, int z, boolean brighter);
+
+    /** Draw the UI for this tile (HP, ATK, Readiness, etc...) **/
+    void drawUI(Graphics g, int x, int y, int z, boolean brighter);
 }

@@ -1,6 +1,7 @@
 package BipoleI.lib.units;
 
 import BipoleI.BattlePanel;
+import BipoleI.lib.Map;
 import BipoleI.lib.Team;
 import BipoleI.lib.Unit;
 
@@ -9,13 +10,13 @@ import java.awt.*;
 public class Farmer extends Unit {
     public String name() { return "Farmer"; }
 
-    public Farmer(Team team) {
-        super(team,5, 3, 0, 10000, false, true);
+    public Farmer(Map map, Team team) {
+        super(map, team,5, 3, 0, 10000, false, true);
     }
 
     @Override
     public void autoAct() {
-        getTeam().addPoints(1);
+        generatePoints(1);
     }
 
     @Override

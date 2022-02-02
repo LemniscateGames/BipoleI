@@ -15,7 +15,9 @@ public class Team {
     private final Color brightColor;
     private final Color brightUnitColor;
 
-    public Team(int id, Color color, Color unitColor){
+    private final Color pointColor;
+
+    public Team(int id, Color color, Color unitColor, Color pointColor){
         this.id = id;
         this.points = 0;
         this.color = color;
@@ -23,6 +25,8 @@ public class Team {
 
         this.brightColor = color.brighter();
         this.brightUnitColor = unitColor.brighter();
+
+        this.pointColor = pointColor;
     }
 
     public Team(int id){
@@ -30,7 +34,10 @@ public class Team {
                 id==0 ? new Color(60,120,225)
                         : new Color(210,65,70),
                 id==0 ? new Color(12,16,24)
-                        : new Color(24,12,16));
+                        : new Color(24,12,16),
+                id==0 ? new Color(110,215,85)
+                        : new Color(220,145,80)
+        );
     }
 
     public int getId() {
@@ -59,5 +66,9 @@ public class Team {
 
     public Color getUnitColor(boolean bright) {
         return bright ? brightUnitColor : unitColor;
+    }
+
+    public Color getPointColor(){
+        return pointColor;
     }
 }
