@@ -28,7 +28,7 @@ public class BattlePanel extends JPanel {
     private float cursorViewRow = 0.0f;
 
     /** Current camera X and Y position (relative to columns and rows, but can be in between) **/
-    private float viewCol = 2.0f;
+    private float viewCol = 3.5f;
     private float viewRow = 3.5f;
 
     /** Current zoom amount (1 tile = 1 square's total bounding box size (not its actual side length)) **/
@@ -44,8 +44,10 @@ public class BattlePanel extends JPanel {
     /** Screen updater timer that refreshes the screen constantly. **/
     private Timer screenUpdater;
 
-    /** Label that displays current point count. **/
+    // Swimg conponents & layout
+    private JPanel overlayPanel;
     private JLabel pointsLabel;
+    private JLabel nameLabel;
 
     /** List of floating number (popups) above tiles, for damage, point generation, etc. **/
     private ArrayList<FloatingText> floatingTexts;
@@ -68,27 +70,23 @@ public class BattlePanel extends JPanel {
         ActionListener updateScreen = evt -> repaint();
         screenUpdater = new Timer(20, updateScreen); screenUpdater.start();
 
-        // Setup Swing component layout
-        GroupLayout layout = new GroupLayout(this);
-        setLayout(layout);
-        layout.setAutoCreateGaps(true);
-        layout.setAutoCreateContainerGaps(true);
+        // ==== Setup Swing components
+        overlayPanel = new JPanel();
+        add(overlayPanel, BorderLayout.CENTER);
+        overlayPanel.setVisible(true);
+        overlayPanel.setOpaque(false);
 
+        // == UNITS
+        // Name
+        nameLabel = new JLabel("bobert");
+        overlayPanel.add(nameLabel, BorderLayout.LINE_START);
+        nameLabel.setFont(GAME_FONT);
+
+        // == OTHER
+        // Points
         pointsLabel = new JLabel();
-        add(pointsLabel, BorderLayout.LINE_START);
-        pointsLabel.setSize(300, 100);
+        overlayPanel.add(pointsLabel, BorderLayout.CENTER);
         pointsLabel.setFont(GAME_FONT);
-        pointsLabel.setForeground(CURSOR_COLOR);
-
-        layout.setHorizontalGroup(
-                layout.createSequentialGroup()
-                        .addComponent(pointsLabel)
-        );
-
-        layout.setVerticalGroup(
-                layout.createSequentialGroup()
-                        .addComponent(pointsLabel)
-        );
 
         // initialize floating texts
         floatingTexts = new ArrayList<>();
@@ -106,8 +104,8 @@ public class BattlePanel extends JPanel {
 
         drawMap(g);
 
-        // Update point counter
-        pointsLabel.setText(battle.getTeams().get(0).getPoints() + " points");
+        // Update Swing components
+        pointsLabel.setText(battle.getTeams().get(0).getPoints() + " pts");
     }
 
     public void drawMap(Graphics g){
@@ -343,29 +341,51 @@ public class BattlePanel extends JPanel {
         drawTriangularPrism(g, x, y, z, team, width, length, height, brighter, grayed, false);
     }
 
+    // CURSOR
+    public void moveCursor(int c, int r){
+        if (cursorCol+c >= 0 && cursorCol+c < battle.getMap().numCols()
+                && cursorRow+r >= 0 && cursorRow+r < battle.getMap().numCols()){
+            cursorCol += c;
+            cursorRow += r;
+            cursorViewCol += c;
+            cursorViewRow += r;
+
+            Tile selectedTile = battle.getMap().getTile(cursorCol, cursorRow);
+            if (selectedTile instanceof Unit) {
+                Unit unit = (Unit)selectedTile;
+                // Update labels
+                nameLabel.setText(unit.name());
+                nameLabel.setForeground(unit.getTeam().getColor(false, false));
+                System.out.println(unit.name());
+            }
+        }
+
+
+    }
+
     // CONTROLS
     public class CursorUp extends AbstractAction{
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (cursorRow > 0) { cursorRow--; cursorViewRow--; }
+            moveCursor(0, -1);
         }
     }
     public class CursorDown extends AbstractAction{
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (cursorRow < battle.getMap().numRows()-1) { cursorRow++; cursorViewRow++; }
+            moveCursor(0, 1);
         }
     }
     public class CursorLeft extends AbstractAction{
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (cursorCol > 0) { cursorCol--; cursorViewCol--; }
+            moveCursor(-1, 0);
         }
     }
     public class CursorRight extends AbstractAction{
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (cursorCol < battle.getMap().numCols()-1) { cursorCol++; cursorViewCol++; }
+            moveCursor(1, 0);
         }
     }
 
@@ -373,6 +393,10 @@ public class BattlePanel extends JPanel {
     public void setBattle(Battle battle){
         this.battle = battle;
         battle.setPanel(this);
+
+        // Misc. Swing stuff
+        pointsLabel.setText(battle.getTeams().get(0).getPoints() + " pts");
+        pointsLabel.setForeground(battle.getTeams().get(0).getPointColor());
     }
 
     public int getCursorCol() {
@@ -381,6 +405,10 @@ public class BattlePanel extends JPanel {
 
     public int getCursorRow() {
         return cursorRow;
+    }
+
+    public JLabel getPointsLabel() {
+        return pointsLabel;
     }
 }
 
