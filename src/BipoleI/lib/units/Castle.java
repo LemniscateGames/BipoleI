@@ -21,7 +21,7 @@ public class Castle extends Unit {
     }
 
     @Override
-    public void draw(Graphics g, int x, int y, int z, boolean brighter) {
+    public void draw(Graphics g, int x, int y, int z, boolean brighter, boolean grayed) {
         // castle main box dimensions
         int width = (int)(z*0.7);
         int length = (int)(z*0.7);
@@ -48,7 +48,7 @@ public class Castle extends Unit {
         int dwidth = (int)(z*0.15);
         int dheight = (int)(z*0.2);
 
-        BattlePanel.drawRectPrism(g, x, y, z, getTeam(), width, length, height, brighter);
+        BattlePanel.drawRectPrism(g, x, y, z, getTeam(), width, length, height, brighter, grayed);
 //        int[] xPoints = new int[]{sx, sx-s, sx, sx+s};
 //        int[] yPoints = new int[]{sy+hs, sy, sy-hs, szy};
 
@@ -56,22 +56,22 @@ public class Castle extends Unit {
         int[] yPoints = new int[]{sy-hs, sy, sy, sy+hs};
 
         // Backmost side tower, draw before center tower
-        BattlePanel.drawRectPrism(g, xPoints[0], yPoints[0], z, getTeam(), swidth, slength, sheight, brighter);
+        BattlePanel.drawRectPrism(g, xPoints[0], yPoints[0], z, getTeam(), swidth, slength, sheight, brighter, grayed);
 
         // Center tower
         BattlePanel.drawRectPrism(g, sx, sy, z, getTeam(),
-                cwidth, clength, cheight, brighter, false);
+                cwidth, clength, cheight, brighter, grayed, false);
         // Triangle above center tower
         BattlePanel.drawTriangularPrism(g, sx, sy-cheight, z, getTeam(),
-                cwidth, clength, ctheight, brighter, true);
+                cwidth, clength, ctheight, brighter, grayed, true);
 
         // Frontmost 3 side towers
         for (int i=1; i<4; i++){
-            BattlePanel.drawRectPrism(g, xPoints[i], yPoints[i], z, getTeam(), swidth, slength, sheight, brighter, true);
+            BattlePanel.drawRectPrism(g, xPoints[i], yPoints[i], z, getTeam(), swidth, slength, sheight, brighter, grayed, true);
         }
 
         // Doors on left and right side
-        BattlePanel.drawWidthRect(g, x+width/2, y+length/4, z, getTeam(), dwidth, dheight, brighter);
-        BattlePanel.drawLengthRect(g, x-width/2, y+length/4, z, getTeam(), dwidth, dheight, brighter);
+        BattlePanel.drawWidthRect(g, x+width/2, y+length/4, z, getTeam(), dwidth, dheight, brighter, grayed);
+        BattlePanel.drawLengthRect(g, x-width/2, y+length/4, z, getTeam(), dwidth, dheight, brighter, grayed);
     }
 }

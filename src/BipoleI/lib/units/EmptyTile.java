@@ -1,4 +1,8 @@
-package BipoleI.lib;
+package BipoleI.lib.units;
+
+import BipoleI.lib.Map;
+import BipoleI.lib.Team;
+import BipoleI.lib.Unit;
 
 import java.awt.*;
 
@@ -10,7 +14,7 @@ public class EmptyTile extends Unit {
     }
 
     @Override
-    public void draw(Graphics g, int x, int y, int z, boolean brighter) {
+    public void draw(Graphics g, int x, int y, int z, boolean brighter, boolean grayed) {
         // draw literally nothing because this is an empty tile. :)
     }
 }

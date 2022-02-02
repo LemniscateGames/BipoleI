@@ -2,6 +2,7 @@ package BipoleI;
 
 import BipoleI.lib.*;
 import BipoleI.lib.units.Castle;
+import BipoleI.lib.units.EmptyTile;
 import BipoleI.lib.units.Farmer;
 import BipoleI.lib.units.Soldier;
 

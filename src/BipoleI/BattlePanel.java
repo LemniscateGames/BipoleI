@@ -15,8 +15,8 @@ public class BattlePanel extends JPanel {
     // CONSTANTS
     public static final Color NEUTRAL_COLOR = new Color(200,200,200);
     public static final Color CURSOR_COLOR = new Color(110, 195, 45);
-    public static final Color READINESS_COLOR = new Color(220,195,70);
-    public static final Color BAR_BACKGROUND_COLOR = new Color(30, 30, 30);
+    public static final Color READINESS_COLOR = new Color(255, 255, 255, 200);
+    public static final Color BAR_BACKGROUND_COLOR = new Color(30, 30, 30, 200);
     public static final Font GAME_FONT = new Font("monospace", Font.PLAIN, 20);
 
     /** Currently selected unit by column and row. **/
@@ -126,7 +126,7 @@ public class BattlePanel extends JPanel {
                 Tile tile = battle.getMap().getTile(c, r);
                 if (tile != null){
                     IntPoint pos = tileScreenPos(c, r);
-                    tile.drawGridTile(g, pos.getX(), pos.getY(), z, c==cursorCol && r==cursorRow);
+                    tile.drawGridTile(g, pos.getX(), pos.getY(), z, c==cursorCol && r==cursorRow, tile.isGrayed());
                 }
             }
         }
@@ -140,7 +140,7 @@ public class BattlePanel extends JPanel {
                 Tile tile = battle.getMap().getTile(c, r);
                 if (tile != null){
                     IntPoint pos = tileScreenPos(c, r);
-                    tile.draw(g, pos.getX(), pos.getY(), z, c==cursorCol && r==cursorRow);
+                    tile.draw(g, pos.getX(), pos.getY(), z, c==cursorCol && r==cursorRow, tile.isGrayed());
                 }
             }
         }
@@ -151,7 +151,7 @@ public class BattlePanel extends JPanel {
                 Tile tile = battle.getMap().getTile(c, r);
                 if (tile != null){
                     IntPoint pos = tileScreenPos(c, r);
-                    tile.drawUI(g, pos.getX(), pos.getY(), z, c==cursorCol && r==cursorRow);
+                    tile.drawUI(g, pos.getX(), pos.getY(), z, c==cursorCol && r==cursorRow, tile.isGrayed());
                 }
             }
         }
@@ -230,7 +230,8 @@ public class BattlePanel extends JPanel {
 
     // ================ SHAPE DRAWING
     public static void drawRectPrism(Graphics g, int x, int y, int z, Team team,
-                                     int width, int length, int height, boolean brighter, boolean hideBottomFace){
+                                     int width, int length, int height,
+                                     boolean brighter, boolean grayed, boolean hideBottomFace){
         int hz = z/2;
         int hw = width/2;
         int hl = length/2;
@@ -246,7 +247,7 @@ public class BattlePanel extends JPanel {
         g.setColor(team.getUnitColor(brighter));
         g.fillPolygon(xPoints, yPoints, 6);
 
-        g.setColor(team.getColor(brighter));
+        g.setColor(team.getColor(brighter, grayed));
         g.drawPolygon(xPoints, yPoints, 6);
 
         if (hideBottomFace){
@@ -254,7 +255,7 @@ public class BattlePanel extends JPanel {
             g.setColor(team.getUnitColor(brighter));
             g.drawLine(xPoints[0], yPoints[0], xPoints[1], yPoints[1]);
             g.drawLine(xPoints[0], yPoints[0], xPoints[5], yPoints[5]);
-            g.setColor(team.getColor(brighter));
+            g.setColor(team.getColor(brighter, grayed));
             g.drawLine(xPoints[1], yPoints[1], xPoints[2], yPoints[2]);
             g.drawLine(xPoints[4], yPoints[4], xPoints[5], yPoints[5]);
         }
@@ -265,11 +266,12 @@ public class BattlePanel extends JPanel {
         }
     }
     public static void drawRectPrism(Graphics g, int x, int y, int z, Team team,
-                                     int width, int length, int height, boolean brighter){
-        drawRectPrism(g, x, y, z, team, width, length, height, brighter,false);
+                                     int width, int length, int height, boolean brighter,  boolean grayed){
+        drawRectPrism(g, x, y, z, team, width, length, height, brighter, grayed,false);
     }
 
-    public static void drawWidthRect(Graphics g, int x, int y, int z, Team team, int width, int height, boolean brighter){
+    public static void drawWidthRect(Graphics g, int x, int y, int z, Team team,
+                                     int width, int height, boolean brighter, boolean grayed){
         int hz = z/2;
         int hw = width/2;
         int qw = width/4;
@@ -282,11 +284,11 @@ public class BattlePanel extends JPanel {
         g.setColor(team.getUnitColor(brighter));
         g.fillPolygon(xPoints, yPoints, 4);
 
-        g.setColor(team.getColor(brighter));
+        g.setColor(team.getColor(brighter, grayed));
         g.drawPolygon(xPoints, yPoints, 4);
     }
 
-    public static void drawLengthRect(Graphics g, int x, int y, int z, Team team, int length, int height, boolean brighter){
+    public static void drawLengthRect(Graphics g, int x, int y, int z, Team team, int length, int height, boolean brighter, boolean grayed){
         int hz = z/2;
         int hl = length/2;
         int ql = length/4;
@@ -299,12 +301,13 @@ public class BattlePanel extends JPanel {
         g.setColor(team.getUnitColor(brighter));
         g.fillPolygon(xPoints, yPoints, 4);
 
-        g.setColor(team.getColor(brighter));
+        g.setColor(team.getColor(brighter, grayed));
         g.drawPolygon(xPoints, yPoints, 4);
     }
 
     public static void drawTriangularPrism(Graphics g, int x, int y, int z, Team team,
-                                     int width, int length, int height, boolean brighter, boolean hideBottomFace){
+                                     int width, int length, int height,
+                                           boolean brighter, boolean grayed, boolean hideBottomFace){
         int hz = z/2;
         int hw = width/2;
         int hl = length/2;
@@ -319,7 +322,7 @@ public class BattlePanel extends JPanel {
         g.setColor(team.getUnitColor(brighter));
         g.fillPolygon(xPoints, yPoints, 4);
 
-        g.setColor(team.getColor(brighter));
+        g.setColor(team.getColor(brighter, grayed));
         g.drawPolygon(xPoints, yPoints, 4);
 
         if (hideBottomFace){
@@ -327,7 +330,7 @@ public class BattlePanel extends JPanel {
             g.setColor(team.getUnitColor(brighter));
             g.drawLine(xPoints[0], yPoints[0], xPoints[1], yPoints[1]);
             g.drawLine(xPoints[0], yPoints[0], xPoints[3], yPoints[3]);
-            g.setColor(team.getColor(brighter));
+            g.setColor(team.getColor(brighter, grayed));
             g.drawLine(xPoints[1], yPoints[1], xPoints[2], yPoints[2]);
             g.drawLine(xPoints[3], yPoints[3], xPoints[2], yPoints[2]);
         }
@@ -336,8 +339,8 @@ public class BattlePanel extends JPanel {
         g.drawLine(xPoints[0], yPoints[0], xPoints[2], yPoints[2]);
     }
     public static void drawTriangularPrism(Graphics g, int x, int y, int z, Team team,
-                                     int width, int length, int height, boolean brighter){
-        drawTriangularPrism(g, x, y, z, team, width, length, height, brighter, false);
+                                     int width, int length, int height, boolean brighter, boolean grayed){
+        drawTriangularPrism(g, x, y, z, team, width, length, height, brighter, grayed, false);
     }
 
     // CONTROLS
@@ -370,6 +373,14 @@ public class BattlePanel extends JPanel {
     public void setBattle(Battle battle){
         this.battle = battle;
         battle.setPanel(this);
+    }
+
+    public int getCursorCol() {
+        return cursorCol;
+    }
+
+    public int getCursorRow() {
+        return cursorRow;
     }
 }
 

@@ -104,7 +104,6 @@ public abstract class Unit implements Tile {
         } else {
             ready = true;
         }
-        System.out.println(this.name() + " is ready!");
     }
 
     /** If this unit has an auto-act, this is what is run when it auto acts. **/
@@ -117,9 +116,9 @@ public abstract class Unit implements Tile {
     }
 
     // ================ RENDERING
-    public abstract void draw(Graphics g, int x, int y, int z, boolean brighter);
+    public abstract void draw(Graphics g, int x, int y, int z, boolean brighter, boolean grayed);
 
-    public void drawUI(Graphics g, int x, int y, int z, boolean brighter){
+    public void drawUI(Graphics g, int x, int y, int z, boolean brighter, boolean grayed){
         y += (int)(z*0.75);
         if (readinessTimer != null){
             if (readinessTimer.isRunning()){
@@ -139,13 +138,13 @@ public abstract class Unit implements Tile {
     }
 
     @Override
-    public void drawGridTile(Graphics g, int x, int y, int z, boolean brighter) {
+    public void drawGridTile(Graphics g, int x, int y, int z, boolean brighter, boolean grayed) {
         int hz = (int)((float)z/2);
 
         int[] xPoints = new int[]{x, x-z, x, x+z};
         int[] yPoints = new int[]{y, y+hz, y+z, y+hz};
 
-        Color teamColor = team.getColor(brighter);
+        Color teamColor = team.getColor(brighter, false);
         Color transparentColor = new Color(
                 teamColor.getRed(),
                 teamColor.getGreen(),
@@ -164,6 +163,12 @@ public abstract class Unit implements Tile {
         g.drawPolygon(xPoints, yPoints, 4);
     }
 
+    public boolean isGrayed(){
+        return (autoAct
+                || readinessTimer != null
+                && (System.currentTimeMillis() < readyStartMillis+readinessTimer.getDelay()));
+    }
+
     // ================ GENERAL
     /** This tile generates points. Creates a popup if a BattlePanel panel is defined for this unit via setPanel(). **/
     public void generatePoints(int amount){
@@ -180,7 +185,6 @@ public abstract class Unit implements Tile {
                 }
             }
         }
-        System.out.println("pos not found...");
         return null;
     }
 
@@ -197,6 +201,8 @@ public abstract class Unit implements Tile {
     public void floatingTextHere(String text, Color color){
         floatingTextHere(text, color, 1000);
     }
+
+    // ================ ACCESSORS & SETTERS
 
     public Map getMap() {
         return map;

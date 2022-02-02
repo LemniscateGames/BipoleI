@@ -3,6 +3,7 @@ package BipoleI.lib;
 import BipoleI.BattlePanel;
 
 import java.awt.*;
+import java.util.function.Consumer;
 
 public class Map {
     private final Tile[][] tiles;

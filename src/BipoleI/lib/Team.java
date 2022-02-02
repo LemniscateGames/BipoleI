@@ -15,6 +15,11 @@ public class Team {
     private final Color brightColor;
     private final Color brightUnitColor;
 
+    private static final Color grayColor = new Color(80, 80, 80);
+
+    private final Color grayedColor;
+    private final Color brightGrayedColor;
+
     private final Color pointColor;
 
     public Team(int id, Color color, Color unitColor, Color pointColor){
@@ -22,11 +27,13 @@ public class Team {
         this.points = 0;
         this.color = color;
         this.unitColor = unitColor;
-
-        this.brightColor = color.brighter();
-        this.brightUnitColor = unitColor.brighter();
-
         this.pointColor = pointColor;
+
+        brightColor = color.brighter();
+        brightUnitColor = unitColor.brighter();
+
+        grayedColor = blendColors(grayColor, color, 0.5);
+        brightGrayedColor = blendColors(grayColor, brightColor, 0.5);
     }
 
     public Team(int id){
@@ -60,8 +67,20 @@ public class Team {
         this.points -= points;
     }
 
-    public Color getColor(boolean bright) {
-        return bright ? brightColor : color;
+    public Color blendColors(Color c1, Color c2, double percent){
+        return new Color(
+                c1.getRed() + (int)((c2.getRed()-c1.getRed())*percent),
+                c1.getGreen() + (int)((c2.getGreen()-c1.getGreen())*percent),
+                c1.getBlue() + (int)((c2.getBlue()-c1.getBlue())*percent)
+        );
+    }
+
+    public Color getColor(boolean bright, boolean grayed) {
+        if (grayed){
+            return bright ? brightGrayedColor : grayedColor;
+        } else {
+            return bright ? brightColor : color;
+        }
     }
 
     public Color getUnitColor(boolean bright) {
