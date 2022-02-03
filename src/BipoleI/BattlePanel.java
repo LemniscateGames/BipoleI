@@ -15,19 +15,22 @@ public class BattlePanel extends JPanel {
     // CONFIG
     private final boolean CAMERA_FOLLOW_CURSOR = true;
     private final boolean EASE_CURSOR = true;
-    private final int CURSOR_SPEED = 100;   // Number of milliseconds for cursor to move
-    private final int CAMERA_SPEED = 100;  // Number of milliseconds for camera to move
+    private final int CURSOR_SPEED = 125;   // Number of milliseconds for cursor to move
 
     // CONSTANTS
+    public static final Color GRAY_COLOR = new Color(80, 80, 80);
     public static final Color NEUTRAL_COLOR = new Color(200,200,200);
     public static final Color UI_FG_COLOR = new Color(220, 220, 220, 220);
     public static final Color UI_BG_COLOR = new Color(8,8,8, 200);
-    public static final Color UI_BORDER_COLOR = new Color(220, 220, 220, 200);
+    public static final Color UI_BORDER_COLOR = new Color(220, 220, 220);
+    public static final Color UI_BORDER_COLOR_GRAYED = blendColors(UI_BORDER_COLOR, GRAY_COLOR, 0.8);
     public static final Color CURSOR_COLOR = new Color(110, 195, 45);
     public static final Color READINESS_COLOR = new Color(255, 255, 255, 200);
-    public static final Color BAR_BACKGROUND_COLOR = new Color(30, 30, 30, 200);
+    public static final Color BAR_BG_COLOR = new Color(30, 30, 30, 200);
+    public static final Color BAR_BORDER_COLOR = new Color(8,8,8);
 
     public static final Font GAME_FONT = new Font("monospace", Font.PLAIN, 24);
+    public static final Font GAME_FONT_SMALL = new Font("monospace", Font.PLAIN, 14);
 
     /** Currently selected unit by column and row. **/
     private int cursorCol = 0;
@@ -85,7 +88,14 @@ public class BattlePanel extends JPanel {
         }
     }
 
-    // RENDERING
+    // ==== MAIN RENDER METHOD
+    // Constants
+    private static final int SHOP_TOP_PAD = 48;
+    private static final int SHOP_ITEM_MARGIN = 8;
+    private static final Number SHOP_ITEM_WIDTH = 64;
+    private static final Number SHOP_ITEM_HEIGHT = 72;
+    private static final Number SHOP_WIDTH = (SHOP_ITEM_WIDTH.intValue() + 2*SHOP_ITEM_MARGIN)*2;
+
     @Override
     public void paintComponent(Graphics g){
         super.paintComponent(g);
@@ -98,16 +108,46 @@ public class BattlePanel extends JPanel {
         drawBox(g, new Rectangle(getWidth()/2 - 100, 0, 200, 50),
                 battle.allies().getPoints() + " pts", GAME_FONT, battle.allies().getPointColor());
 
-        //
+        // - Shop at top-right
+        Shop shop = battle.allies().getShop();
+        int shopRows = shop.getItems().size() - shop.getItems().size()/2; // Int division but rounded up
+        int shopHeight = (SHOP_ITEM_HEIGHT.intValue() + 2*SHOP_ITEM_MARGIN)*shopRows + SHOP_TOP_PAD;
+        drawBox(g, new Rectangle(getWidth() - SHOP_WIDTH.intValue(), 0, SHOP_WIDTH.intValue(), shopHeight));
+        for (int i=0; i<shop.getItems().size(); i++){
+            Buyable item = shop.getItems().get(i);
+            boolean buyable = item.isBuyable(battle.allies());
 
+            int x = getWidth() - SHOP_WIDTH.intValue() + ((SHOP_ITEM_MARGIN*2 + SHOP_ITEM_WIDTH.intValue())*(i%2)) + SHOP_ITEM_MARGIN;
+            int y = (SHOP_ITEM_MARGIN*2 + SHOP_ITEM_HEIGHT.intValue())*(i/2) + SHOP_TOP_PAD + SHOP_ITEM_MARGIN;
+            Rectangle itemRect = new Rectangle(x, y, SHOP_ITEM_WIDTH.intValue(), SHOP_ITEM_HEIGHT.intValue());
+            drawBox(g, itemRect, UI_BG_COLOR, buyable ? UI_BORDER_COLOR : UI_BORDER_COLOR_GRAYED);
+
+            // Draw the unit of the Buyable if it is a ShopUnit
+            if (item instanceof ShopUnit){
+                Unit unit = ((ShopUnit)item).getUnit();
+                int x1 = x + SHOP_ITEM_WIDTH.intValue()/2;
+                int y1 = y + SHOP_ITEM_WIDTH.intValue()/2 - 24;
+                unit.draw(g, x1, y1, 60, false, !buyable);
+                Rectangle itemCostRect = new Rectangle(itemRect.x, itemRect.y+52, itemRect.width, itemRect.height-52);
+                drawCenteredString(g, itemCostRect,item.getCost() + " pts", GAME_FONT_SMALL, battle.allies().getPointColor());
+            }
+        }
     }
 
-    public void drawBox(Graphics g, Rectangle rect){
-        g.setColor(UI_BG_COLOR);
+    // RENDERING
+    public void drawBox(Graphics g, Rectangle rect, Color bg, Color border){
+        g.setColor(bg);
         g.fillRect(rect.x, rect.y, rect.width, rect.height);
-        g.setColor(NEUTRAL_COLOR);
+        g.setColor(border);
         g.drawRect(rect.x, rect.y, rect.width, rect.height);
     }
+    public void drawBox(Graphics g, Rectangle rect, Color bg){
+        drawBox(g, rect, bg, UI_BORDER_COLOR);
+    }
+    public void drawBox(Graphics g, Rectangle rect){
+        drawBox(g, rect, UI_BG_COLOR, UI_BORDER_COLOR);
+    }
+
     public void drawBox(Graphics g, Rectangle rect, String text){
         drawBox(g, rect);
         drawCenteredString(g, rect, text, GAME_FONT);
@@ -215,6 +255,17 @@ public class BattlePanel extends JPanel {
                 new int[]{(int)pos.getY()+tz, (int)pos.getY()+hz, (int)pos.getY()+z-tz, (int)pos.getY()+hz},
                 4
         );
+    }
+
+    public static Color blendColors(Color c1, Color c2, double percent){
+        return new Color(
+                c1.getRed() + (int)((c2.getRed()-c1.getRed())*percent),
+                c1.getGreen() + (int)((c2.getGreen()-c1.getGreen())*percent),
+                c1.getBlue() + (int)((c2.getBlue()-c1.getBlue())*percent)
+        );
+    }
+    public static Color blendColors(Color c1, Color c2){
+        return blendColors(c1, c2, 0.5);
     }
 
     // ================ UNIT OVERLAY STATS
@@ -370,7 +421,7 @@ public class BattlePanel extends JPanel {
         drawTriangularPrism(g, x, y, z, team, width, length, height, brighter, grayed, false);
     }
 
-    // CURSOR
+    // CURSOR & CAMERA
     public void moveCursor(int c, int r){
         if (cursorCol+c >= 0 && cursorCol+c < battle.getMap().numCols()
                 && cursorRow+r >= 0 && cursorRow+r < battle.getMap().numCols()){
@@ -379,10 +430,10 @@ public class BattlePanel extends JPanel {
 
             if (EASE_CURSOR) {
                 float col = cursorViewCol.floatValue();
-                cursorViewCol = new AnimatedValue(TimingFunction.EASE, 100,
+                cursorViewCol = new AnimatedValue(TimingFunction.EASE, CURSOR_SPEED,
                         col, cursorCol);
                 float row = cursorViewRow.floatValue();
-                cursorViewRow = new AnimatedValue(TimingFunction.EASE, 100,
+                cursorViewRow = new AnimatedValue(TimingFunction.EASE, CURSOR_SPEED,
                         row, cursorRow);
             } else {
                 cursorViewCol = cursorViewCol.floatValue() + c;
@@ -401,8 +452,12 @@ public class BattlePanel extends JPanel {
                 System.out.println(unit.name());
             }
         }
+    }
 
-
+    public void setZoom(float val){
+        zoom = val;
+        z = (int)zoom;
+        hz = z/2;
     }
 
     // CONTROLS

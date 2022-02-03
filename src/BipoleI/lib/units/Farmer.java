@@ -13,6 +13,7 @@ public class Farmer extends Unit {
     public Farmer(Map map, Team team) {
         super(map, team,5, 3, 0, 10000, false, true);
     }
+    public Farmer(){}
 
     @Override
     public void autoAct() {

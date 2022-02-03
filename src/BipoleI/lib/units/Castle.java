@@ -14,6 +14,7 @@ public class Castle extends Unit {
     public Castle(Map map, Team team) {
         super(map, team,0, 25, 0, 5000, false, true);
     }
+    public Castle(){}
 
     @Override
     public void autoAct() {

@@ -1,5 +1,7 @@
 package BipoleI.lib;
 
+import BipoleI.BattlePanel;
+
 import java.awt.*;
 
 public class Team {
@@ -15,12 +17,12 @@ public class Team {
     private final Color brightColor;
     private final Color brightUnitColor;
 
-    private static final Color grayColor = new Color(80, 80, 80);
-
     private final Color grayedColor;
     private final Color brightGrayedColor;
 
     private final Color pointColor;
+
+    private Shop shop;
 
     public Team(int id, Color color, Color unitColor, Color pointColor){
         this.id = id;
@@ -32,8 +34,10 @@ public class Team {
         brightColor = color.brighter();
         brightUnitColor = unitColor.brighter();
 
-        grayedColor = blendColors(grayColor, color, 0.5);
-        brightGrayedColor = blendColors(grayColor, brightColor, 0.5);
+        grayedColor = BattlePanel.blendColors(BattlePanel.GRAY_COLOR, color, 0.4);
+        brightGrayedColor = BattlePanel.blendColors(BattlePanel.GRAY_COLOR, brightColor, 0.4);
+
+        shop = Shop.generateShop(this);
     }
 
     public Team(int id){
@@ -67,14 +71,6 @@ public class Team {
         this.points -= points;
     }
 
-    public Color blendColors(Color c1, Color c2, double percent){
-        return new Color(
-                c1.getRed() + (int)((c2.getRed()-c1.getRed())*percent),
-                c1.getGreen() + (int)((c2.getGreen()-c1.getGreen())*percent),
-                c1.getBlue() + (int)((c2.getBlue()-c1.getBlue())*percent)
-        );
-    }
-
     public Color getColor(boolean bright, boolean grayed) {
         if (grayed){
             return bright ? brightGrayedColor : grayedColor;
@@ -89,5 +85,9 @@ public class Team {
 
     public Color getPointColor(){
         return pointColor;
+    }
+
+    public Shop getShop() {
+        return shop;
     }
 }

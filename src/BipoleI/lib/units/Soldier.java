@@ -13,6 +13,7 @@ public class Soldier extends Unit {
     public Soldier(Map map, Team team) {
         super(map, team,3, 5, 2, 7500);
     }
+    public Soldier(){}
 
     @Override
     public void draw(Graphics g, int x, int y, int z, boolean brighter, boolean grayed) {

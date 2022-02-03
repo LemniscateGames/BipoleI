@@ -1,6 +1,8 @@
 package BipoleI.lib;
 
 import BipoleI.BattlePanel;
+import BipoleI.lib.units.Farmer;
+import BipoleI.lib.units.Soldier;
 
 import java.util.ArrayList;
 
@@ -10,6 +12,8 @@ public class Battle {
 
     /** (Optional) The BattlePanel this is displaying to. **/
     private BattlePanel panel;
+
+
 
     public Battle(Map map, ArrayList<Team> teams){
         this.map = map;

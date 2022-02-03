@@ -75,6 +75,10 @@ public abstract class Unit implements Tile {
         this.team = team;
         this.map = map;
     }
+    // this constructor is ONLY used for the shop items
+    public Unit(){
+        this(null, null);
+    }
 
     // ================ TIMING
     /** Run when this unit is bought/placed. Starts the readiness timer. **/
@@ -128,11 +132,14 @@ public abstract class Unit implements Tile {
                 int hh = height/2;
                 int barWidth = (int)(z*readinessPercent());
 
-                g.setColor(BattlePanel.BAR_BACKGROUND_COLOR);
+                g.setColor(BattlePanel.BAR_BG_COLOR);
                 g.fillRect(x-hw, y-hh, width, height);
 
                 g.setColor(BattlePanel.READINESS_COLOR);
                 g.fillRect(x-hw, y-hh, barWidth, height);
+
+                g.setColor(BattlePanel.BAR_BORDER_COLOR);
+                g.drawRect(x-hw, y-hh, width, height);
             }
         }
     }
@@ -210,6 +217,10 @@ public abstract class Unit implements Tile {
 
     public Team getTeam() {
         return team;
+    }
+
+    public int getCost() {
+        return cost;
     }
 
     public int getHp() {
