@@ -12,9 +12,17 @@ import java.util.ArrayList;
 // Maybe an actual 3d bipole game with a 3d engine from scratch later but too confusing for now.
 
 public class BattlePanel extends JPanel {
+    // CONFIG
+    private final boolean CAMERA_FOLLOW_CURSOR = true;
+    private final boolean EASE_CURSOR = true;
+    private final int CURSOR_SPEED = 100;   // Number of milliseconds for cursor to move
+    private final int CAMERA_SPEED = 100;  // Number of milliseconds for camera to move
+
     // CONSTANTS
     public static final Color NEUTRAL_COLOR = new Color(200,200,200);
-    public static final Color UI_BG_COLOR = new Color(8,8,8, 191);
+    public static final Color UI_FG_COLOR = new Color(220, 220, 220, 220);
+    public static final Color UI_BG_COLOR = new Color(8,8,8, 200);
+    public static final Color UI_BORDER_COLOR = new Color(220, 220, 220, 200);
     public static final Color CURSOR_COLOR = new Color(110, 195, 45);
     public static final Color READINESS_COLOR = new Color(255, 255, 255, 200);
     public static final Color BAR_BACKGROUND_COLOR = new Color(30, 30, 30, 200);
@@ -26,12 +34,12 @@ public class BattlePanel extends JPanel {
     private int cursorRow = 0;
 
     /** Current displayed X and Y coordinates of cursor. Can be in between tiles during cursor movement. **/
-    private float cursorViewCol = 0.0f;
-    private float cursorViewRow = 0.0f;
+    private Number cursorViewCol = 0.0f;
+    private Number cursorViewRow = 0.0f;
 
     /** Current camera X and Y position (relative to columns and rows, but can be in between) **/
-    private float viewCol = 3.5f;
-    private float viewRow = 3.5f;
+    private Number viewCol = 3.5f;
+    private Number viewRow = 3.5f;
 
     /** Current zoom amount (1 tile = 1 square's total bounding box size (not its actual side length)) **/
     private float zoom;
@@ -44,13 +52,13 @@ public class BattlePanel extends JPanel {
     private Battle battle;
 
     /** Screen updater timer that refreshes the screen constantly. **/
-    private Timer screenUpdater;
+    private final Timer screenUpdater;
 
     /** List of floating number (popups) above tiles, for damage, point generation, etc. **/
-    private ArrayList<FloatingText> floatingTexts;
+    private final ArrayList<FloatingText> floatingTexts;
 
     public BattlePanel(){
-        zoom = 80.0f;
+        zoom = 64.0f;
         z = (int)zoom;   // zoom size in pixels
         hz = (int)(zoom/2);   // half of zoom size in pixels
 
@@ -69,6 +77,12 @@ public class BattlePanel extends JPanel {
 
         // initialize floating texts
         floatingTexts = new ArrayList<>();
+
+        // camera init
+        if (CAMERA_FOLLOW_CURSOR){
+            viewCol = cursorCol;
+            viewRow = cursorRow;
+        }
     }
 
     // RENDERING
@@ -76,35 +90,51 @@ public class BattlePanel extends JPanel {
     public void paintComponent(Graphics g){
         super.paintComponent(g);
 
-        // cross-hair (testing)
-//        g.setColor(NEUTRAL_COLOR);
-//        g.drawLine(getWidth()/2 - 4, getHeight()/2, getWidth()/2 + 4, getHeight()/2);
-//        g.drawLine(getWidth()/2, getHeight()/2 - 4, getWidth()/2, getHeight()/2 + 4);
-
+        // == Draw all tiles and their associated UI over their tiles
         drawMap(g);
 
-        // Draw point counter box at top of screen
-        Rectangle pointsBox = new Rectangle(getWidth()/2 - 100, 0, 200, 50);
-        g.setColor(UI_BG_COLOR);
-        g.fillRect(pointsBox.x, pointsBox.y, pointsBox.width, pointsBox.height);
-        g.setColor(NEUTRAL_COLOR);
-        g.drawRect(pointsBox.x, pointsBox.y, pointsBox.width, pointsBox.height);
-        g.setColor(battle.allies().getPointColor());
+        // == Draw screenspace UI (points, shop sidebar, etc)
+        // Point counter box at top center of screen
+        drawBox(g, new Rectangle(getWidth()/2 - 100, 0, 200, 50),
+                battle.allies().getPoints() + " pts", GAME_FONT, battle.allies().getPointColor());
 
-        FontMetrics metrics = g.getFontMetrics(GAME_FONT);
-        drawCenteredString(g, battle.allies().getPoints() + " pts", pointsBox);
+        //
+
     }
 
-    public void drawCenteredString(Graphics g, String text, Rectangle rect, Font font) {
+    public void drawBox(Graphics g, Rectangle rect){
+        g.setColor(UI_BG_COLOR);
+        g.fillRect(rect.x, rect.y, rect.width, rect.height);
+        g.setColor(NEUTRAL_COLOR);
+        g.drawRect(rect.x, rect.y, rect.width, rect.height);
+    }
+    public void drawBox(Graphics g, Rectangle rect, String text){
+        drawBox(g, rect);
+        drawCenteredString(g, rect, text, GAME_FONT);
+    }
+    public void drawBox(Graphics g, Rectangle rect, String text, Font font){
+        drawBox(g, rect);
+        drawCenteredString(g, rect, text, font);
+    }
+    public void drawBox(Graphics g, Rectangle rect, String text, Font font, Color textColor){
+        drawBox(g, rect);
+        drawCenteredString(g, rect, text, font, textColor);
+    }
+
+    public void drawCenteredString(Graphics g, Rectangle rect, String text, Font font, Color textColor) {
         FontMetrics metrics = g.getFontMetrics(font);
         int x = rect.x + (rect.width - metrics.stringWidth(text)) / 2;
         int y = rect.y + ((rect.height - metrics.getHeight()) / 2) + metrics.getAscent();
 
         g.setFont(font);
+        if (textColor != null) g.setColor(textColor);
         g.drawString(text, x, y);
     }
-    public void drawCenteredString(Graphics g, String text, Rectangle rect){
-        drawCenteredString(g, text, rect, GAME_FONT);
+    public void drawCenteredString(Graphics g,  Rectangle rect, String text, Font font){
+        drawCenteredString(g, rect, text, font, null);
+    }
+    public void drawCenteredString(Graphics g, Rectangle rect, String text){
+        drawCenteredString(g, rect, text, GAME_FONT, null);
     }
 
     public void drawMap(Graphics g){
@@ -174,7 +204,7 @@ public class BattlePanel extends JPanel {
 
     public void drawCursor(Graphics g){
         g.setColor(CURSOR_COLOR);
-        FloatPoint pos = tileScreenPos(cursorViewCol, cursorViewRow);
+        FloatPoint pos = tileScreenPos(cursorViewCol.floatValue(), cursorViewRow.floatValue());
 
         int fz = z/5;
         int tz = z/10;
@@ -213,14 +243,14 @@ public class BattlePanel extends JPanel {
     /** Get the screen position of the upper-left square of the specified tile **/
     public IntPoint tileScreenPos(int c, int r){
         return new IntPoint(
-                (int)((c-viewCol + viewRow)*zoom + getWidth()/2) - z*r,
-                (int)((r-viewRow - viewCol/2 + viewRow/2)*zoom + getHeight()/2) + hz*c - hz*r
+                (int)((c-viewCol.floatValue() + viewRow.floatValue())*zoom + getWidth()/2) - z*r,
+                (int)((r-viewRow.floatValue() - viewCol.floatValue()/2 + viewRow.floatValue()/2)*zoom + getHeight()/2) + hz*c - hz*r
         );
     }
     public FloatPoint tileScreenPos(float c, float r){
         return new FloatPoint(
-                (int)((c-viewCol + viewRow)*zoom + getWidth()/2) - z*r,
-                (int)((r-viewRow - viewCol/2 + viewRow/2)*zoom + getHeight()/2) + hz*c - hz*r
+                ((c-viewCol.floatValue() + viewRow.floatValue())*zoom + getWidth()/2.0f) - z*r,
+                ((r-viewRow.floatValue() - viewCol.floatValue()/2 + viewRow.floatValue()/2)*zoom + getHeight()/2.0f) + hz*c - hz*r
         );
     }
 
@@ -346,8 +376,23 @@ public class BattlePanel extends JPanel {
                 && cursorRow+r >= 0 && cursorRow+r < battle.getMap().numCols()){
             cursorCol += c;
             cursorRow += r;
-            cursorViewCol += c;
-            cursorViewRow += r;
+
+            if (EASE_CURSOR) {
+                float col = cursorViewCol.floatValue();
+                cursorViewCol = new AnimatedValue(TimingFunction.EASE, 100,
+                        col, cursorCol);
+                float row = cursorViewRow.floatValue();
+                cursorViewRow = new AnimatedValue(TimingFunction.EASE, 100,
+                        row, cursorRow);
+            } else {
+                cursorViewCol = cursorViewCol.floatValue() + c;
+                cursorViewRow = cursorViewRow.floatValue() + r;
+            }
+
+            if (CAMERA_FOLLOW_CURSOR) {
+                viewCol = cursorViewCol;
+                viewRow = cursorViewRow;
+            }
 
             Tile selectedTile = battle.getMap().getTile(cursorCol, cursorRow);
             if (selectedTile instanceof Unit) {
