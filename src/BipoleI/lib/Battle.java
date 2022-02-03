@@ -24,6 +24,23 @@ public class Battle {
         return teams;
     }
 
+    public Team allies(){
+        for (Team team : teams){
+            if (team.getId() == 0){
+                return team;
+            }
+        }
+        return null;
+    }
+    public Team enemies(){
+        for (Team team : teams){
+            if (team.getId() == 0){
+                return team;
+            }
+        }
+        return null;
+    }
+
     public void setPanel(BattlePanel panel) {
         this.panel = panel;
         map.setPanel(panel);

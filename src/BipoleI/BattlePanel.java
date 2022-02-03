@@ -14,10 +14,12 @@ import java.util.ArrayList;
 public class BattlePanel extends JPanel {
     // CONSTANTS
     public static final Color NEUTRAL_COLOR = new Color(200,200,200);
+    public static final Color UI_BG_COLOR = new Color(8,8,8, 191);
     public static final Color CURSOR_COLOR = new Color(110, 195, 45);
     public static final Color READINESS_COLOR = new Color(255, 255, 255, 200);
     public static final Color BAR_BACKGROUND_COLOR = new Color(30, 30, 30, 200);
-    public static final Font GAME_FONT = new Font("monospace", Font.PLAIN, 20);
+
+    public static final Font GAME_FONT = new Font("monospace", Font.PLAIN, 24);
 
     /** Currently selected unit by column and row. **/
     private int cursorCol = 0;
@@ -44,16 +46,11 @@ public class BattlePanel extends JPanel {
     /** Screen updater timer that refreshes the screen constantly. **/
     private Timer screenUpdater;
 
-    // Swimg conponents & layout
-    private JPanel overlayPanel;
-    private JLabel pointsLabel;
-    private JLabel nameLabel;
-
     /** List of floating number (popups) above tiles, for damage, point generation, etc. **/
     private ArrayList<FloatingText> floatingTexts;
 
     public BattlePanel(){
-        zoom = 48.0f;
+        zoom = 80.0f;
         z = (int)zoom;   // zoom size in pixels
         hz = (int)(zoom/2);   // half of zoom size in pixels
 
@@ -69,24 +66,6 @@ public class BattlePanel extends JPanel {
         // Screen refresher
         ActionListener updateScreen = evt -> repaint();
         screenUpdater = new Timer(20, updateScreen); screenUpdater.start();
-
-        // ==== Setup Swing components
-        overlayPanel = new JPanel();
-        add(overlayPanel, BorderLayout.CENTER);
-        overlayPanel.setVisible(true);
-        overlayPanel.setOpaque(false);
-
-        // == UNITS
-        // Name
-        nameLabel = new JLabel("bobert");
-        overlayPanel.add(nameLabel, BorderLayout.LINE_START);
-        nameLabel.setFont(GAME_FONT);
-
-        // == OTHER
-        // Points
-        pointsLabel = new JLabel();
-        overlayPanel.add(pointsLabel, BorderLayout.CENTER);
-        pointsLabel.setFont(GAME_FONT);
 
         // initialize floating texts
         floatingTexts = new ArrayList<>();
@@ -104,8 +83,28 @@ public class BattlePanel extends JPanel {
 
         drawMap(g);
 
-        // Update Swing components
-        pointsLabel.setText(battle.getTeams().get(0).getPoints() + " pts");
+        // Draw point counter box at top of screen
+        Rectangle pointsBox = new Rectangle(getWidth()/2 - 100, 0, 200, 50);
+        g.setColor(UI_BG_COLOR);
+        g.fillRect(pointsBox.x, pointsBox.y, pointsBox.width, pointsBox.height);
+        g.setColor(NEUTRAL_COLOR);
+        g.drawRect(pointsBox.x, pointsBox.y, pointsBox.width, pointsBox.height);
+        g.setColor(battle.allies().getPointColor());
+
+        FontMetrics metrics = g.getFontMetrics(GAME_FONT);
+        drawCenteredString(g, battle.allies().getPoints() + " pts", pointsBox);
+    }
+
+    public void drawCenteredString(Graphics g, String text, Rectangle rect, Font font) {
+        FontMetrics metrics = g.getFontMetrics(font);
+        int x = rect.x + (rect.width - metrics.stringWidth(text)) / 2;
+        int y = rect.y + ((rect.height - metrics.getHeight()) / 2) + metrics.getAscent();
+
+        g.setFont(font);
+        g.drawString(text, x, y);
+    }
+    public void drawCenteredString(Graphics g, String text, Rectangle rect){
+        drawCenteredString(g, text, rect, GAME_FONT);
     }
 
     public void drawMap(Graphics g){
@@ -354,8 +353,6 @@ public class BattlePanel extends JPanel {
             if (selectedTile instanceof Unit) {
                 Unit unit = (Unit)selectedTile;
                 // Update labels
-                nameLabel.setText(unit.name());
-                nameLabel.setForeground(unit.getTeam().getColor(false, false));
                 System.out.println(unit.name());
             }
         }
@@ -393,10 +390,6 @@ public class BattlePanel extends JPanel {
     public void setBattle(Battle battle){
         this.battle = battle;
         battle.setPanel(this);
-
-        // Misc. Swing stuff
-        pointsLabel.setText(battle.getTeams().get(0).getPoints() + " pts");
-        pointsLabel.setForeground(battle.getTeams().get(0).getPointColor());
     }
 
     public int getCursorCol() {
@@ -405,10 +398,6 @@ public class BattlePanel extends JPanel {
 
     public int getCursorRow() {
         return cursorRow;
-    }
-
-    public JLabel getPointsLabel() {
-        return pointsLabel;
     }
 }
 

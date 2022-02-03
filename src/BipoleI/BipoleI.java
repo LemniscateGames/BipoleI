@@ -50,7 +50,7 @@ public class BipoleI {
         frame.setContentPane(panel);
         frame.setVisible(true);
 
-        panel.setBackground(new Color(100,100,100));
+        panel.setBackground(new Color(16,16,16));
         panel.setBattle(battle);
     }
 }
