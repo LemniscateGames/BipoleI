@@ -13,37 +13,28 @@ public class Team {
 
     private final Color color;
     private final Color unitColor;
-
-    private final Color brightColor;
-    private final Color brightUnitColor;
-
-    private final Color grayedColor;
-    private final Color brightGrayedColor;
-
     private final Color pointColor;
+
+    private final Color brokeColor;
 
     private Shop shop;
 
     public Team(int id, Color color, Color unitColor, Color pointColor){
         this.id = id;
-        this.points = 0;
+        this.points = 5;
         this.color = color;
         this.unitColor = unitColor;
         this.pointColor = pointColor;
 
-        brightColor = color.brighter();
-        brightUnitColor = unitColor.brighter();
-
-        grayedColor = BattlePanel.blendColors(BattlePanel.GRAY_COLOR, color, 0.4);
-        brightGrayedColor = BattlePanel.blendColors(BattlePanel.GRAY_COLOR, brightColor, 0.4);
+        this.brokeColor = BattlePanel.blendColors(pointColor, new Color(128, 128, 128), 0.5);
 
         shop = Shop.generateShop(this);
     }
 
     public Team(int id){
         this(id,
-                id==0 ? new Color(60,120,225)
-                        : new Color(210,65,70),
+                id==0 ? new Color(41, 110, 231)
+                        : new Color(226, 50, 56),
                 id==0 ? new Color(12,16,24)
                         : new Color(24,12,16),
                 id==0 ? new Color(110,215,85)
@@ -71,20 +62,33 @@ public class Team {
         this.points -= points;
     }
 
-    public Color getColor(boolean bright, boolean grayed) {
-        if (grayed){
-            return bright ? brightGrayedColor : grayedColor;
-        } else {
-            return bright ? brightColor : color;
-        }
+    public Color getColor(Number brightness) {
+        return BattlePanel.blendColors(color, BattlePanel.LIGHT_COLOR, brightness);
+    }
+    public Color getColor(Number brightness, Number grayness) {
+        return BattlePanel.blendColors(getColor(brightness), BattlePanel.GRAY_COLOR, grayness);
+    }
+    public Color getColor(){
+        return getColor(0.0, 0.0);
     }
 
-    public Color getUnitColor(boolean bright) {
-        return bright ? brightUnitColor : unitColor;
+    // Yes brightness and grayness both control blackness, dont ask me why that makes sense
+    public Color getUnitColor(Number brightness) {
+        return BattlePanel.blendColors(unitColor, Color.BLACK, brightness);
+    }
+    public Color getUnitColor(Number brightness, Number grayness) {
+        return BattlePanel.blendColors(getUnitColor(brightness), Color.BLACK, grayness);
+    }
+    public Color getUnitColor(){
+        return getUnitColor(0.0, 0.0);
     }
 
     public Color getPointColor(){
         return pointColor;
+    }
+
+    public Color getBrokeColor() {
+        return brokeColor;
     }
 
     public Shop getShop() {

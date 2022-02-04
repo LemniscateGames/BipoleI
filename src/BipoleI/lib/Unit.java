@@ -6,7 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 
-public abstract class Unit implements Tile {
+public abstract class Unit extends Tile {
     /** THis unit's display name. **/
     public abstract String name();
 
@@ -107,6 +107,7 @@ public abstract class Unit implements Tile {
             readyStartMillis = System.currentTimeMillis();
         } else {
             ready = true;
+            setGrayness(0);
         }
     }
 
@@ -120,38 +121,24 @@ public abstract class Unit implements Tile {
     }
 
     // ================ RENDERING
-    public abstract void draw(Graphics g, int x, int y, int z, boolean brighter, boolean grayed);
+    public abstract void draw(Graphics g, int x, int y, int z);
 
-    public void drawUI(Graphics g, int x, int y, int z, boolean brighter, boolean grayed){
-        y += (int)(z*0.75);
+    public void drawUI(Graphics g, int x, int y, int z){
         if (readinessTimer != null){
             if (readinessTimer.isRunning()){
-                int width = z;
-                int height = (int)(z*0.1);
-                int hw = width/2;
-                int hh = height/2;
-                int barWidth = (int)(z*readinessPercent());
-
-                g.setColor(BattlePanel.BAR_BG_COLOR);
-                g.fillRect(x-hw, y-hh, width, height);
-
-                g.setColor(BattlePanel.READINESS_COLOR);
-                g.fillRect(x-hw, y-hh, barWidth, height);
-
-                g.setColor(BattlePanel.BAR_BORDER_COLOR);
-                g.drawRect(x-hw, y-hh, width, height);
+                BattlePanel.drawBar(g, x, y, z, readinessPercent());
             }
         }
     }
 
     @Override
-    public void drawGridTile(Graphics g, int x, int y, int z, boolean brighter, boolean grayed) {
+    public void drawGridTile(Graphics g, int x, int y, int z) {
         int hz = (int)((float)z/2);
 
         int[] xPoints = new int[]{x, x-z, x, x+z};
         int[] yPoints = new int[]{y, y+hz, y+z, y+hz};
 
-        Color teamColor = team.getColor(brighter, false);
+        Color teamColor = team.getColor(getBrightness(), 0.0);
         Color transparentColor = new Color(
                 teamColor.getRed(),
                 teamColor.getGreen(),
@@ -159,18 +146,13 @@ public abstract class Unit implements Tile {
                 64
         );
 
-        if (brighter) {
-            teamColor = teamColor.brighter();
-            transparentColor = transparentColor.brighter();
-        }
-
         g.setColor(transparentColor);
         g.fillPolygon(xPoints, yPoints, 4);
         g.setColor(teamColor);
         g.drawPolygon(xPoints, yPoints, 4);
     }
 
-    public boolean isGrayed(){
+    public boolean canAct(){
         return (autoAct
                 || readinessTimer != null
                 && (System.currentTimeMillis() < readyStartMillis+readinessTimer.getDelay()));

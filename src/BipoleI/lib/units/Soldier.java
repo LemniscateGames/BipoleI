@@ -16,7 +16,7 @@ public class Soldier extends Unit {
     public Soldier(){}
 
     @Override
-    public void draw(Graphics g, int x, int y, int z, boolean brighter, boolean grayed) {
-        BattlePanel.drawRectPrism(g, x, y, z, getTeam(), (int)(z/3.0), (int)(z/3.0), (int)(z/2.5), brighter, grayed);
+    public void draw(Graphics g, int x, int y, int z) {
+        BattlePanel.drawRectPrism(g, x, y, z, getTeam(), (int)(z/3.0), (int)(z/3.0), (int)(z/2.5), getBrightness(), getGrayness());
     }
 }

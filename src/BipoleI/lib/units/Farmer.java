@@ -21,7 +21,7 @@ public class Farmer extends Unit {
     }
 
     @Override
-    public void draw(Graphics g, int x, int y, int z, boolean brighter, boolean grayed) {
-        BattlePanel.drawTriangularPrism(g, x, y, z, getTeam(), (int)(z/3.0), (int)(z/3.0), (int)(z/2.5), brighter, grayed);
+    public void draw(Graphics g, int x, int y, int z) {
+        BattlePanel.drawTriangularPrism(g, x, y, z, getTeam(), (int)(z/3.0), (int)(z/3.0), (int)(z/2.5), getBrightness(), getGrayness());
     }
 }

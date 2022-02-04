@@ -2,17 +2,35 @@ package BipoleI.lib;
 
 import java.awt.*;
 
-public interface Tile {
+public abstract class Tile {
+    private Number brightness = 0.0;
+    private Number grayness = 0.6;
+
     /** Draw the grid square for this tile only.
      * Drawn after the white grid is drawn but before cursor and units. **/
-    void drawGridTile(Graphics g, int x, int y, int z, boolean brighter, boolean grayed);
+    public abstract void drawGridTile(Graphics g, int x, int y, int z);
 
     /** Draw this tile's unit. Drawn after the cursor is drawn. **/
-    void draw(Graphics g, int x, int y, int z, boolean brighter, boolean grayed);
+    public abstract void draw(Graphics g, int x, int y, int z);
 
     /** Draw the UI for this tile (HP, ATK, Readiness, etc...) **/
-    void drawUI(Graphics g, int x, int y, int z, boolean brighter, boolean grayed);
+    public abstract void drawUI(Graphics g, int x, int y, int z);
 
-    /** Whether or not this should be drawn as greyed. **/
-    boolean isGrayed();
+    public abstract boolean canAct();
+
+    public Number getBrightness() {
+        return brightness;
+    }
+
+    public void setBrightness(Number brightness) {
+        this.brightness = brightness;
+    }
+
+    public Number getGrayness() {
+        return grayness;
+    }
+
+    public void setGrayness(Number grayness) {
+        this.grayness = grayness;
+    }
 }

@@ -1,6 +1,7 @@
 package BipoleI.lib;
 
 import BipoleI.BattlePanel;
+import BipoleI.lib.units.ClaimedTile;
 
 import java.awt.*;
 import java.util.function.Consumer;
@@ -13,7 +14,11 @@ public class Map {
 
     public Map(int height, int width){
         tiles = new Tile[height][width];
-        // null = unclaimed tile that is currently uncontested.
+        for (int r=0; r<height; r++){
+            for (int c=0; c<width; c++){
+                tiles[r][c] = new EmptyTile(this);
+            }
+        }
     }
 
     public int numCols(){
@@ -29,6 +34,7 @@ public class Map {
     }
 
     public Tile getTile(int c, int r){
+        if (c>=numCols() || c<0 || r>=numRows() || r<0) return null;
         return tiles[c][r];
     }
 
@@ -37,6 +43,51 @@ public class Map {
         unit.place();
         unit.setPanel(panel);
     }
+
+    public IntPoint getPositionOf(Tile tile){
+        for (int c=0; c<numCols(); c++){
+            for (int r=0; r<numRows(); r++){
+                if (tiles[c][r] == tile) {
+                    return new IntPoint(c, r);
+                }
+            }
+        }
+        return null;
+    }
+
+    public void replaceTile(Tile tile, Tile newTile){
+        for (int c=0; c<numCols(); c++){
+            for (int r=0; r<numRows(); r++){
+                if (tiles[c][r] == tile) {
+                    tiles[c][r] = newTile;
+                }
+            }
+        }
+    }
+
+    public boolean isAdjacentOwnedTile(int c, int r, Team team){
+        if (isTileTeam(c+1, r, team)) return true;
+        if (isTileTeam(c-1, r, team)) return true;
+        if (isTileTeam(c, r+1, team)) return true;
+        if (isTileTeam(c, r-1, team)) return true;
+        return false;
+    }
+    public boolean isAdjacentOwnedTile(Tile tile, Team team){
+        IntPoint pos = getPositionOf(tile);
+        return isAdjacentOwnedTile(pos.getX(), pos.getY(), team);
+    }
+
+    public boolean isTileTeam(Tile tile, Team team){
+        if (tile instanceof Unit){
+            return ((Unit) tile).getTeam() == team;
+        } else {
+            return false;
+        }
+    }
+    public boolean isTileTeam(int c, int r, Team team){
+        return isTileTeam(getTile(c, r), team);
+    }
+
 
     // ================ ACCESSORS & SETTERS
 
