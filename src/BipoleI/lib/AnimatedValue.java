@@ -35,6 +35,10 @@ public class AnimatedValue extends Number {
         this(timingFunction, duration, start, end, true);
     }
 
+    public AnimatedValue(int duration, double start, double end){
+        this(TimingFunction.EASE, duration, start, end, true);
+    }
+
     public void start(){
         this.startTime = System.currentTimeMillis();
         endTime = startTime+duration;

@@ -1,6 +1,7 @@
 package BipoleI;
 
 import BipoleI.lib.*;
+import BipoleI.lib.units.ClaimedTile;
 
 import javax.swing.*;
 import java.awt.*;
@@ -105,11 +106,12 @@ public class BattlePanel extends JPanel {
 
     // ==== MAIN RENDER METHOD
     // Constants
-    private static final int SHOP_TOP_PAD = 48;
-    private static final int SHOP_ITEM_MARGIN = 8;
-    private static final Number SHOP_ITEM_WIDTH = 64;
-    private static final Number SHOP_ITEM_HEIGHT = 72;
-    private static final Number SHOP_WIDTH = (SHOP_ITEM_WIDTH.intValue() + 2*SHOP_ITEM_MARGIN)*2;
+    private final int SHOP_TOP_PAD = 48;
+    private Number SHOP_BOTTOM_PAD = 0;
+    private final int SHOP_ITEM_MARGIN = 8;
+    private Number SHOP_ITEM_WIDTH = 64;
+    private Number SHOP_ITEM_HEIGHT = 72;
+    private Number SHOP_Z = 60;
 
     @Override
     public void paintComponent(Graphics g){
@@ -124,16 +126,17 @@ public class BattlePanel extends JPanel {
                 battle.allies().getPoints() + " pts", GAME_FONT, battle.allies().getPointColor());
 
         // - Shop at top-right
+        int SHOP_WIDTH = (SHOP_ITEM_WIDTH.intValue() + 2*SHOP_ITEM_MARGIN)*2;
         Shop shop = battle.allies().getShop();
         int shopRows = shop.getItems().size() - shop.getItems().size()/2; // Int division but rounded up
-        int shopHeight = (SHOP_ITEM_HEIGHT.intValue() + 2*SHOP_ITEM_MARGIN)*shopRows + SHOP_TOP_PAD;
-        drawBox(g, new Rectangle(getWidth() - SHOP_WIDTH.intValue(), 0, SHOP_WIDTH.intValue(), shopHeight));
+        int shopHeight = (SHOP_ITEM_HEIGHT.intValue() + 2*SHOP_ITEM_MARGIN)*shopRows + SHOP_TOP_PAD + SHOP_BOTTOM_PAD.intValue();
+        drawBox(g, new Rectangle(getWidth() - SHOP_WIDTH, 0, SHOP_WIDTH, shopHeight));
         for (int i=shop.getItems().size()-1; i>=0; i--){
             Buyable item = shop.getItems().get(i);
             boolean canAfford = item.isBuyable(battle.allies());
             boolean itemSelected = cursorMode == CursorMode.SHOP_CURSOR && shopCursorCol == i%2 && shopCursorRow == i/2;
 
-            int x = getWidth() - SHOP_WIDTH.intValue() + ((SHOP_ITEM_MARGIN*2 + SHOP_ITEM_WIDTH.intValue())*(i%2)) + SHOP_ITEM_MARGIN;
+            int x = getWidth() - SHOP_WIDTH + ((SHOP_ITEM_MARGIN*2 + SHOP_ITEM_WIDTH.intValue())*(i%2)) + SHOP_ITEM_MARGIN;
             int y = (SHOP_ITEM_MARGIN*2 + SHOP_ITEM_HEIGHT.intValue())*(i/2) + SHOP_TOP_PAD + SHOP_ITEM_MARGIN;
             Rectangle itemRect = new Rectangle(x, y, SHOP_ITEM_WIDTH.intValue(), SHOP_ITEM_HEIGHT.intValue());
             Color borderColor = itemSelected ?
@@ -146,11 +149,11 @@ public class BattlePanel extends JPanel {
                 Unit unit = ((ShopUnit)item).getUnit();
 
                 int x1 = x + SHOP_ITEM_WIDTH.intValue()/2;
-                int y1 = y + SHOP_ITEM_WIDTH.intValue()/2 - 24;
+                int y1 = y + (SHOP_ITEM_WIDTH.intValue()/2) - (int)(z*0.4);
 
                 unit.setBrightness(canAfford ? 0.0 : 0.25);
                 unit.setGrayness(canAfford ? 0.0 : 0.75);
-                unit.draw(g, x1, y1, 60);
+                unit.draw(g, x1, y1, SHOP_Z.intValue());
                 Rectangle itemCostRect = new Rectangle(itemRect.x, itemRect.y+52, itemRect.width, itemRect.height-52);
                 drawCenteredString(g, itemCostRect,item.getCost() + " pts", GAME_FONT_SMALL,
                         canAfford ? battle.allies().getPointColor() : battle.allies().getBrokeColor());
@@ -565,6 +568,30 @@ public class BattlePanel extends JPanel {
         return battle.getMap().getTile(cursorCol, cursorRow);
     }
 
+    // MODAL STUFF
+    public static final TimingFunction SHOP_TIMING = TimingFunction.EASE;
+    public static final int SHOP_TIME = 125;
+    public void setCursorMode(CursorMode mode){
+        if (cursorMode == mode) return;
+
+        // Pre-mode change (turn mode into a neutral state)
+        if (cursorMode == CursorMode.SHOP_CURSOR){
+            SHOP_BOTTOM_PAD = new AnimatedValue(SHOP_TIMING, SHOP_TIME, SHOP_BOTTOM_PAD.intValue(), 0);
+            SHOP_ITEM_WIDTH = new AnimatedValue(SHOP_TIMING, SHOP_TIME, SHOP_ITEM_WIDTH.intValue(), 64);
+            SHOP_ITEM_HEIGHT = new AnimatedValue(SHOP_TIMING, SHOP_TIME, SHOP_ITEM_HEIGHT.intValue(), 72);
+            SHOP_Z = new AnimatedValue(SHOP_TIMING, SHOP_TIME, SHOP_Z.intValue(), 60);
+        }
+
+        cursorMode = mode;
+
+        // Post-mode change (transition into the new mode)
+        if (cursorMode == CursorMode.SHOP_CURSOR){
+            SHOP_BOTTOM_PAD = new AnimatedValue(SHOP_TIMING, SHOP_TIME, SHOP_BOTTOM_PAD.intValue(), 100);
+            SHOP_ITEM_WIDTH = new AnimatedValue(SHOP_TIMING, SHOP_TIME, SHOP_ITEM_WIDTH.intValue(), 88);
+            SHOP_Z = new AnimatedValue(SHOP_TIMING, SHOP_TIME, SHOP_Z.intValue(), 80);
+        }
+    }
+
     // CONTROLS
     public class CursorUp extends AbstractAction{
         @Override
@@ -591,25 +618,39 @@ public class BattlePanel extends JPanel {
         }
     }
 
+    /** Space - used to switch from map to shop cursor mode. (Also automatically switches when buying a unit.) **/
     public class KeySpace extends AbstractAction {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (cursorMode == CursorMode.MAP_CURSOR){
-                cursorMode = CursorMode.SHOP_CURSOR;
+                setCursorMode(CursorMode.SHOP_CURSOR);
             } else {
-                cursorMode = CursorMode.MAP_CURSOR;
+                setCursorMode(CursorMode.MAP_CURSOR);
             }
         }
     }
 
+    /** Z - interact button. Contest unclaimed tiles, build on owned empty tiles,
+     *  attack with ready units, buy selected shop item, etc. **/
     public class KeyZ extends AbstractAction{
         @Override
         public void actionPerformed(ActionEvent e) {
             System.out.println("z pressed");
+
             Tile tile = getSelectedTile();
-            if (tile instanceof EmptyTile){
-                ((EmptyTile) tile).contest(battle.allies());
+            if (tile instanceof UnclaimedTile){
+                ((UnclaimedTile) tile).contest(battle.allies());
             }
+
+            else if (tile instanceof ClaimedTile) {
+                cursorMode = CursorMode.SHOP_CURSOR;
+            }
+
+//            else if (tile instanceof Unit){
+//                if (tile.canAct()){
+//
+//                }
+//            }
         }
     }
 

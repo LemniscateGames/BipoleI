@@ -7,7 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 
-public class EmptyTile extends Tile {
+public class UnclaimedTile extends Tile {
     private Map map;
     private boolean beingContested;
     private Team currentContestingTeam;
@@ -17,7 +17,7 @@ public class EmptyTile extends Tile {
     private static final int CAPTURE_TIME = 6000;
 
     /** The map is needed so that this tile can be replaced on the map once it is captured. **/
-    public EmptyTile(Map map){
+    public UnclaimedTile(Map map){
         this.map = map;
     }
 
@@ -59,8 +59,7 @@ public class EmptyTile extends Tile {
             int hz = z/2;
             int az = (z/10);
             if (az < 1) az = 1;
-            long time = System.currentTimeMillis();
-            long cycle = (time-contestStartTime)%SHIFT_SPEED;
+            long cycle = System.currentTimeMillis()%SHIFT_SPEED;
             int yshift = (int)((double)cycle/SHIFT_SPEED*az);
 
             g.setColor(lineColor);

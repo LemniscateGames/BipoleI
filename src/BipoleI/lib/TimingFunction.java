@@ -11,4 +11,6 @@ public interface TimingFunction {
     // common TimingFunctions as constants
     TimingFunction LINEAR = new LinearTiming();
     TimingFunction EASE = new CubicBezierTiming(.25,.1,.25,1);
+    TimingFunction EASE_OUT = new CubicBezierTiming(0,0,.15,1);
+    TimingFunction EASE_OUT_FAST = new CubicBezierTiming(.1,.66,.32,.99);
 }

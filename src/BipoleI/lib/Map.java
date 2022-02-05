@@ -1,10 +1,6 @@
 package BipoleI.lib;
 
 import BipoleI.BattlePanel;
-import BipoleI.lib.units.ClaimedTile;
-
-import java.awt.*;
-import java.util.function.Consumer;
 
 public class Map {
     private final Tile[][] tiles;
@@ -16,7 +12,7 @@ public class Map {
         tiles = new Tile[height][width];
         for (int r=0; r<height; r++){
             for (int c=0; c<width; c++){
-                tiles[r][c] = new EmptyTile(this);
+                tiles[r][c] = new UnclaimedTile(this);
             }
         }
     }
