@@ -1,6 +1,6 @@
 package BipoleI.lib.units;
 
-import BipoleI.BattlePanel;
+import BipoleI.lib.battlepanel.BattlePanel;
 import BipoleI.lib.Map;
 import BipoleI.lib.Team;
 import BipoleI.lib.Unit;

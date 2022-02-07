@@ -1,6 +1,7 @@
 package BipoleI;
 
 import BipoleI.lib.*;
+import BipoleI.lib.battlepanel.BattlePanel;
 import BipoleI.lib.units.Castle;
 import BipoleI.lib.units.ClaimedTile;
 import BipoleI.lib.units.Farmer;
@@ -46,7 +47,7 @@ public class BipoleI {
 
     public static void loadBattle(JFrame frame, Battle battle){
         BattlePanel panel = new BattlePanel();
-        panel.setZoom(100.0f);
+        panel.setZoom(80.0f);
 
         frame.setContentPane(panel);
         frame.setVisible(true);

@@ -1,4 +1,4 @@
-package BipoleI;
+package BipoleI.lib.battlepanel;
 
 import BipoleI.lib.*;
 import BipoleI.lib.units.ClaimedTile;
@@ -23,18 +23,24 @@ public class BattlePanel extends JPanel {
     public static final Color LIGHT_COLOR = new Color(255, 255, 235);
     public static final Color NEUTRAL_COLOR = new Color(200,200,200);
     public static final Color UI_FG_COLOR = new Color(220, 220, 220, 220);
-    public static final Color UI_BG_COLOR = new Color(8,8,8, 200);
-    public static final Color UI_BORDER_COLOR = new Color(220, 220, 220);
+    public static final Color UI_BG_COLOR = new Color(8,8,8, 192);
+    public static final Color UI_BG_COLOR_TRANSPARENT = new Color(8,8,8, 64);
+    public static final Color UI_BORDER_COLOR = new Color(220, 220, 224);
+    public static final Color UI_BORDER_COLOR_TRANSPARENT = new Color(220, 220, 224, 80);
     public static final Color UI_BORDER_COLOR_GRAYED = blendColors(UI_BORDER_COLOR, GRAY_COLOR, 0.7);
     public static final Color CURSOR_COLOR = new Color(110, 195, 45);
     public static final Color READINESS_COLOR = new Color(255, 255, 255, 200);
     public static final Color BAR_BG_COLOR = new Color(30, 30, 30, 200);
     public static final Color BAR_BORDER_COLOR = new Color(8,8,8);
 
-    public static final Font GAME_FONT = new Font("monospace", Font.PLAIN, 24);
+    public static final Font GAME_FONT_BIG = new Font("monospace", Font.PLAIN, 24);
     public static final Font GAME_FONT_SMALL = new Font("monospace", Font.PLAIN, 14);
 
     public enum CursorMode {MAP_CURSOR, SHOP_CURSOR}
+
+    // VARIABLES
+    /** The main FixedBox ElementBox that stores all the UI ELementBox elements. **/
+    private BattlePanelElementManager root;
 
     /** The current control mode. **/
     private CursorMode cursorMode = CursorMode.MAP_CURSOR;
@@ -102,6 +108,9 @@ public class BattlePanel extends JPanel {
             viewCol = cursorCol;
             viewRow = cursorRow;
         }
+
+        // initialize ElementBox UI
+        root = new BattlePanelElementManager(this);
     }
 
     // ==== MAIN RENDER METHOD
@@ -122,43 +131,11 @@ public class BattlePanel extends JPanel {
 
         // == Draw screenspace UI (points, shop sidebar, etc)
         // Point counter box at top center of screen
-        drawBox(g, new Rectangle(getWidth()/2 - 100, 0, 200, 50),
-                battle.allies().getPoints() + " pts", GAME_FONT, battle.allies().getPointColor());
+//        drawBox(g, new Rectangle(getWidth()/2 - 100, 0, 200, 50),
+//                battle.allies().getPoints() + " pts", GAME_FONT, battle.allies().getPointColor());
 
-        // - Shop at top-right
-        int SHOP_WIDTH = (SHOP_ITEM_WIDTH.intValue() + 2*SHOP_ITEM_MARGIN)*2;
-        Shop shop = battle.allies().getShop();
-        int shopRows = shop.getItems().size() - shop.getItems().size()/2; // Int division but rounded up
-        int shopHeight = (SHOP_ITEM_HEIGHT.intValue() + 2*SHOP_ITEM_MARGIN)*shopRows + SHOP_TOP_PAD + SHOP_BOTTOM_PAD.intValue();
-        drawBox(g, new Rectangle(getWidth() - SHOP_WIDTH, 0, SHOP_WIDTH, shopHeight));
-        for (int i=shop.getItems().size()-1; i>=0; i--){
-            Buyable item = shop.getItems().get(i);
-            boolean canAfford = item.isBuyable(battle.allies());
-            boolean itemSelected = cursorMode == CursorMode.SHOP_CURSOR && shopCursorCol == i%2 && shopCursorRow == i/2;
-
-            int x = getWidth() - SHOP_WIDTH + ((SHOP_ITEM_MARGIN*2 + SHOP_ITEM_WIDTH.intValue())*(i%2)) + SHOP_ITEM_MARGIN;
-            int y = (SHOP_ITEM_MARGIN*2 + SHOP_ITEM_HEIGHT.intValue())*(i/2) + SHOP_TOP_PAD + SHOP_ITEM_MARGIN;
-            Rectangle itemRect = new Rectangle(x, y, SHOP_ITEM_WIDTH.intValue(), SHOP_ITEM_HEIGHT.intValue());
-            Color borderColor = itemSelected ?
-                    (canAfford ? battle.allies().getPointColor() : battle.allies().getBrokeColor()) :
-                    (canAfford ? UI_BORDER_COLOR : UI_BORDER_COLOR_GRAYED);
-            drawBox(g, itemRect, UI_BG_COLOR, borderColor);
-
-            // Draw the unit of the Buyable if it is a ShopUnit
-            if (item instanceof ShopUnit){
-                Unit unit = ((ShopUnit)item).getUnit();
-
-                int x1 = x + SHOP_ITEM_WIDTH.intValue()/2;
-                int y1 = y + (SHOP_ITEM_WIDTH.intValue()/2) - (int)(z*0.4);
-
-                unit.setBrightness(canAfford ? 0.0 : 0.25);
-                unit.setGrayness(canAfford ? 0.0 : 0.75);
-                unit.draw(g, x1, y1, SHOP_Z.intValue());
-                Rectangle itemCostRect = new Rectangle(itemRect.x, itemRect.y+52, itemRect.width, itemRect.height-52);
-                drawCenteredString(g, itemCostRect,item.getCost() + " pts", GAME_FONT_SMALL,
-                        canAfford ? battle.allies().getPointColor() : battle.allies().getBrokeColor());
-            }
-        }
+        // Render ElementBox UI
+        root.draw(g);
     }
 
     // RENDERING
@@ -177,7 +154,7 @@ public class BattlePanel extends JPanel {
 
     public static void drawBox(Graphics g, Rectangle rect, String text){
         drawBox(g, rect);
-        drawCenteredString(g, rect, text, GAME_FONT);
+        drawCenteredString(g, rect, text, GAME_FONT_BIG);
     }
     public static void drawBox(Graphics g, Rectangle rect, String text, Font font){
         drawBox(g, rect);
@@ -201,7 +178,7 @@ public class BattlePanel extends JPanel {
         drawCenteredString(g, rect, text, font, UI_FG_COLOR);
     }
     public static void drawCenteredString(Graphics g, Rectangle rect, String text){
-        drawCenteredString(g, rect, text, GAME_FONT, UI_FG_COLOR);
+        drawCenteredString(g, rect, text, GAME_FONT_BIG, UI_FG_COLOR);
     }
 
     public void drawMap(Graphics g){
@@ -658,6 +635,7 @@ public class BattlePanel extends JPanel {
     public void setBattle(Battle battle){
         this.battle = battle;
         battle.setPanel(this);
+        root.initializeWithBattle(battle);
     }
 
     public int getCursorCol() {
@@ -666,6 +644,10 @@ public class BattlePanel extends JPanel {
 
     public int getCursorRow() {
         return cursorRow;
+    }
+
+    public Battle getBattle() {
+        return battle;
     }
 }
 

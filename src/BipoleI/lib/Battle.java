@@ -1,8 +1,6 @@
 package BipoleI.lib;
 
-import BipoleI.BattlePanel;
-import BipoleI.lib.units.Farmer;
-import BipoleI.lib.units.Soldier;
+import BipoleI.lib.battlepanel.BattlePanel;
 
 import java.util.ArrayList;
 

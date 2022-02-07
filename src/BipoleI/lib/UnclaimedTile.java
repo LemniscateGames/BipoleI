@@ -1,6 +1,6 @@
 package BipoleI.lib;
 
-import BipoleI.BattlePanel;
+import BipoleI.lib.battlepanel.BattlePanel;
 import BipoleI.lib.units.ClaimedTile;
 
 import javax.swing.*;
@@ -83,7 +83,7 @@ public class UnclaimedTile extends Tile {
                     (double)(System.currentTimeMillis()-contestStartTime)/CAPTURE_TIME, currentContestingTeam.getColor());
 
             BattlePanel.drawCenteredString(g, new Rectangle(x-z, y, z*2, z),
-                    contestPoints+"", BattlePanel.GAME_FONT, currentContestingTeam.getColor(0.2));
+                    contestPoints+"", BattlePanel.GAME_FONT_BIG, currentContestingTeam.getColor(0.2));
         }
     }
     @Override

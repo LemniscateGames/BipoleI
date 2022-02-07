@@ -1,6 +1,6 @@
 package BipoleI.lib;
 
-import BipoleI.BattlePanel;
+import BipoleI.lib.battlepanel.BattlePanel;
 
 import java.awt.*;
 
