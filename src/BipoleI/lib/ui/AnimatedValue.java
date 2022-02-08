@@ -1,7 +1,4 @@
-package BipoleI.lib;
-
-import BipoleI.lib.timingFunctions.CubicBezierTiming;
-import BipoleI.lib.timingFunctions.LinearTiming;
+package BipoleI.lib.ui;
 
 /** A value that changes over time and eventually comes to rest.
  * Can be given different timing functions and durations.

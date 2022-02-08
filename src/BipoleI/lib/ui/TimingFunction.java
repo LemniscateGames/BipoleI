@@ -1,4 +1,4 @@
-package BipoleI.lib;
+package BipoleI.lib.ui;
 
 import BipoleI.lib.timingFunctions.CubicBezierTiming;
 import BipoleI.lib.timingFunctions.LinearTiming;

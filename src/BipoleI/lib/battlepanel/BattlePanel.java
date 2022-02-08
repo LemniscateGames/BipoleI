@@ -1,6 +1,8 @@
 package BipoleI.lib.battlepanel;
 
 import BipoleI.lib.*;
+import BipoleI.lib.ui.AnimatedValue;
+import BipoleI.lib.ui.TimingFunction;
 import BipoleI.lib.units.ClaimedTile;
 
 import javax.swing.*;
@@ -242,15 +244,15 @@ public class BattlePanel extends JPanel {
 
     public void drawCursor(Graphics g){
         g.setColor(CURSOR_COLOR);
-        FloatPoint pos = tileScreenPos(cursorViewCol.floatValue(), cursorViewRow.floatValue());
+        DoublePoint pos = tileScreenPos(cursorViewCol.floatValue(), cursorViewRow.floatValue());
 
         int fz = z/5;
         int tz = z/10;
 
         float r = 0.8f;
         g.drawPolygon(
-                new int[]{(int)pos.getX(), (int)pos.getX()-z+fz, (int)pos.getX(), (int)pos.getX()+z-fz},
-                new int[]{(int)pos.getY()+tz, (int)pos.getY()+hz, (int)pos.getY()+z-tz, (int)pos.getY()+hz},
+                new int[]{(int)pos.x, (int)pos.x-z+fz, (int)pos.x, (int)pos.x+z-fz},
+                new int[]{(int)pos.y+tz, (int)pos.y+hz, (int)pos.y+z-tz, (int)pos.y+hz},
                 4
         );
     }
@@ -321,8 +323,8 @@ public class BattlePanel extends JPanel {
         );
     }
     /** Convert a tile position to its position on the screen. **/
-    public FloatPoint tileScreenPos(float c, float r){
-        return new FloatPoint(
+    public DoublePoint tileScreenPos(double c, double r){
+        return new DoublePoint(
                 ((c-viewCol.floatValue() + viewRow.floatValue())*zoom + getWidth()/2.0f) - z*r,
                 ((r-viewRow.floatValue() - viewCol.floatValue()/2 + viewRow.floatValue()/2)*zoom + getHeight()/2.0f) + hz*c - hz*r
         );
@@ -632,6 +634,12 @@ public class BattlePanel extends JPanel {
     }
 
     // ================ ACCESSORS & SETTERS
+
+
+    public float getZoom() {
+        return zoom;
+    }
+
     public void setBattle(Battle battle){
         this.battle = battle;
         battle.setPanel(this);

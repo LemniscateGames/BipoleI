@@ -1,6 +1,12 @@
 package BipoleI.lib.battlepanel;
 
 import BipoleI.lib.*;
+import BipoleI.lib.ui.AlignedBox;
+import BipoleI.lib.ui.ElementBox;
+import BipoleI.lib.shop.Buyable;
+import BipoleI.lib.shop.Shop;
+import BipoleI.lib.shop.ShopItemBox;
+import BipoleI.lib.ui.RootBox;
 
 import java.awt.*;
 

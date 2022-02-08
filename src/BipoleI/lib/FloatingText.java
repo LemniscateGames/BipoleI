@@ -26,11 +26,11 @@ public class FloatingText {
     }
 
     public void draw(BattlePanel panel, Graphics g, int z){
-        FloatPoint pos = panel.tileScreenPos(viewCol, viewRow);
+        DoublePoint pos = panel.tileScreenPos(viewCol, viewRow);
         int floatDistance = (int)(32 * percentComplete());
 
         g.setColor(displayColor);
-        g.drawString(displayText, (int)pos.getX(), (int)pos.getY() - floatDistance + z/2);
+        g.drawString(displayText, (int)pos.x, (int)pos.y - floatDistance + z/2);
     }
 
     public double percentComplete(){

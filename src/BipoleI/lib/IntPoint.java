@@ -1,7 +1,7 @@
 package BipoleI.lib;
 
 // Same as point but uses ints.
-public class IntPoint implements Coordinate {
+public class IntPoint {
     private final int x, y;
     public IntPoint(int x, int y){
         this.x = x;

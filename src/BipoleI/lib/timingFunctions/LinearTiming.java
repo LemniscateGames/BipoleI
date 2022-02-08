@@ -1,6 +1,6 @@
 package BipoleI.lib.timingFunctions;
 
-import BipoleI.lib.TimingFunction;
+import BipoleI.lib.ui.TimingFunction;
 
 public class LinearTiming implements TimingFunction {
     public double valueAtTime(double t) {

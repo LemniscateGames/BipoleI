@@ -1,5 +1,6 @@
-package BipoleI.lib;
+package BipoleI.lib.ui;
 
+import BipoleI.lib.Alignment;
 import BipoleI.lib.battlepanel.BattlePanel;
 
 import java.awt.*;

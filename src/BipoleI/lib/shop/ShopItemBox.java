@@ -1,9 +1,8 @@
-package BipoleI.lib;
+package BipoleI.lib.shop;
 
-import BipoleI.lib.battlepanel.BattlePanel;
+import BipoleI.lib.ui.ElementBox;
 
 import java.awt.*;
-import java.util.ArrayList;
 
 public class ShopItemBox extends ElementBox {
     private Buyable item;

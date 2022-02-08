@@ -1,4 +1,7 @@
-package BipoleI.lib;
+package BipoleI.lib.ui;
+
+import BipoleI.lib.Alignment;
+import BipoleI.lib.ui.ElementBox;
 
 /** AlignedBoxes will align to their parent with the internal selfAlign
  * stored in this class regardless of parents' align. Should be used to align items within a FixedBox,

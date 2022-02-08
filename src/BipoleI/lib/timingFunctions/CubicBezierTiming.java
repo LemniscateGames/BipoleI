@@ -1,6 +1,6 @@
 package BipoleI.lib.timingFunctions;
 
-import BipoleI.lib.TimingFunction;
+import BipoleI.lib.ui.TimingFunction;
 
 public class CubicBezierTiming implements TimingFunction {
     private final double x1, y1, x2, y2;

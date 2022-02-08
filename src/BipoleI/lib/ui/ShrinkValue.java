@@ -1,4 +1,4 @@
-package BipoleI.lib;
+package BipoleI.lib.ui;
 
 /** Works the same as StretchValue but shrinks the first value by all other values. **/
 public class ShrinkValue extends Number {

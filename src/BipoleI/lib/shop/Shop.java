@@ -1,5 +1,6 @@
-package BipoleI.lib;
+package BipoleI.lib.shop;
 
+import BipoleI.lib.Team;
 import BipoleI.lib.units.Castle;
 import BipoleI.lib.units.Farmer;
 import BipoleI.lib.units.Soldier;

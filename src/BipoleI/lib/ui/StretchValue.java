@@ -1,4 +1,4 @@
-package BipoleI.lib;
+package BipoleI.lib.ui;
 
 /** A value that stores an array of Numbers and adds up their int values when this Number's intValue is retreived. **/
 public class StretchValue extends Number {
