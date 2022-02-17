@@ -1,7 +1,13 @@
 package lib;
 
+import java.awt.*;
+
 /** A unit. **/
-public abstract class Unit implements Tile {
+public abstract class Unit extends ClaimedTile {
+    public Unit(Team team) {
+        super(team);
+    }
+
     /** Hit points until defeated. **/
     public abstract int getBaseHp();
     /** Damage dealt to units when attacking. **/
@@ -10,7 +16,7 @@ public abstract class Unit implements Tile {
     public abstract int getBaseDelay();
 
     @Override
-    public boolean hasBorder() {
-        return true;
+    public void drawTileBase(Graphics g, double x, double y, double z) {
+
     }
 }
