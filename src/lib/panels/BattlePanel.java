@@ -6,17 +6,19 @@ import lib.Team;
 import lib.Tile;
 import lib.display.AnimatedValue;
 import lib.display.TimingFunction;
+import lib.misc.RowColPoint;
 
 import javax.swing.*;
+import javax.swing.event.MouseInputListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 
-public class BattlePanel extends JPanel {
+public class BattlePanel extends JPanel implements MouseInputListener, MouseMotionListener, MouseWheelListener {
     // ==== CONSTANTS
     // Cursor
     public static final boolean EASE_CURSOR = true;
     public static final int CURSOR_SPEED = 150;
+    public static final double ZOOM_SCROLL_FACTOR = 0.8;
 
     // Grid
     public static final double ROW_X_OFFSET = -1.0;
@@ -44,6 +46,10 @@ public class BattlePanel extends JPanel {
     private Number cursorCameraRow = 0;
     private Number cursorCameraCol = 0;
 
+    // Controls
+    private Point clickPoint;
+    private double clickCameraRowPos, clickCameraColPos;
+
     // Timers
     private final Timer screenRefreshTimer;
 
@@ -58,6 +64,12 @@ public class BattlePanel extends JPanel {
         screenRefreshTimer.start();
 
         // Controls
+        // mouse
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        addMouseWheelListener(this);
+
+        // keyboard
         getInputMap().put(KeyStroke.getKeyStroke("UP"), "up");
         getActionMap().put("up", new CursorUp());
         getInputMap().put(KeyStroke.getKeyStroke("DOWN"), "down");
@@ -196,6 +208,7 @@ public class BattlePanel extends JPanel {
         double relCol = colPos - cameraColPos.doubleValue();
         return (relRow*ROW_Y_OFFSET + relCol*COL_Y_OFFSET + height*HEIGHT_Y_OFFSET)*zoom.doubleValue() + getHeight()/2.0;
     }
+
     public double getScreenY(double rowPos, double colPos){
         return getScreenY(rowPos, colPos, 0);
     }
@@ -203,11 +216,88 @@ public class BattlePanel extends JPanel {
     public int getScreenIntX(double rowPos, double colPos){
         return (int)getScreenX(rowPos, colPos);
     }
+
     public int getScreenIntY(double rowPos, double colPos){
         return (int)getScreenY(rowPos, colPos);
     }
 
+
+    /** Get the grid X position of a given X and Y screen coordinate. **/
+    public RowColPoint getGridPos(int x, int y){
+        double relX = (x - getWidth()/2.0) / zoom.doubleValue();
+        double relY = (y - getHeight()/2.0) / zoom.doubleValue();
+
+        double row = (relX/ROW_X_OFFSET + relY/ROW_Y_OFFSET)/2 + cameraRowPos.doubleValue();
+        double col = (relX/COL_X_OFFSET + relY/COL_Y_OFFSET)/2 + cameraColPos.doubleValue();
+
+        return new RowColPoint((int)row, (int)col);
+    }
+
+
     // ==== CONTROL LISTENERS
+    // mouse
+    @Override
+    public void mouseClicked(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        clickPoint = e.getPoint();
+        clickCameraRowPos = cameraRowPos.doubleValue();
+        clickCameraColPos = cameraColPos.doubleValue();
+
+        if (e.getButton() == 1){
+            RowColPoint clickGridPos = getGridPos(e.getX(), e.getY());
+            setCursor(clickGridPos.row, clickGridPos.col);
+        }
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        int dx = e.getX() - clickPoint.x;
+        int dy = e.getY() - clickPoint.y;
+        cameraRowPos = clickCameraRowPos - (dx/ROW_X_OFFSET + dy/ROW_Y_OFFSET) / 2 / zoom.doubleValue();
+        cameraColPos = clickCameraColPos - (dx/COL_X_OFFSET + dy/COL_Y_OFFSET) / 2 / zoom.doubleValue();
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        System.out.println("scrolled "+e);
+
+        double scale = Math.pow(ZOOM_SCROLL_FACTOR, e.getWheelRotation());
+        zoom = zoom.doubleValue() * scale;
+
+        RowColPoint mouseGridPos = getGridPos(getWidth() - e.getX(), getHeight() - e.getY());
+
+        double rowDistance = mouseGridPos.row - cameraRowPos.doubleValue();
+        double colDistance = mouseGridPos.col - cameraColPos.doubleValue();
+
+        cameraRowPos = mouseGridPos.row - rowDistance*scale;
+        cameraColPos = mouseGridPos.col - colDistance*scale;
+    }
+
+    // keyboard
     public class CursorUp extends AbstractAction{
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -250,6 +340,29 @@ public class BattlePanel extends JPanel {
             } else {
                 cursorCameraRow = cursorCameraRow.doubleValue() + row;
                 cursorCameraCol = cursorCameraCol.doubleValue() + col;
+            }
+
+            Tile newTile = map.getTile(cursorRow, cursorCol);
+            if (newTile != null) newTile.onHover();
+        }
+    }
+
+    public void setCursor(int row, int col){
+        Map map = battle.getMap();
+        if (row >= 0 && row < map.numRows()
+                && col >= 0 && col < map.numCols()){
+            Tile tile = map.getTile(cursorRow, cursorCol);
+            if (tile != null) tile.onUnhover();
+
+            cursorRow = row;
+            cursorCol = col;
+
+            if (EASE_CURSOR){
+                cursorCameraRow = new AnimatedValue(CURSOR_SPEED, cursorCameraRow.doubleValue(), cursorRow);
+                cursorCameraCol = new AnimatedValue(CURSOR_SPEED, cursorCameraCol.doubleValue(), cursorCol);
+            } else {
+                cursorCameraRow = row;
+                cursorCameraCol = col;
             }
 
             Tile newTile = map.getTile(cursorRow, cursorCol);
