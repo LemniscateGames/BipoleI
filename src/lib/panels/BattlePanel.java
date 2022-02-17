@@ -1,9 +1,11 @@
-package lib.display;
+package lib.panels;
 
 import lib.Battle;
 import lib.Map;
 import lib.Team;
 import lib.Tile;
+import lib.display.AnimatedValue;
+import lib.display.TimingFunction;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,13 +13,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class BattlePanel extends JPanel {
-    /** The battle this BattlePanel is displaying. **/
-    private Battle battle;
+    // ==== CONSTANTS
+    // Cursor
+    public static final boolean EASE_CURSOR = true;
+    public static final int CURSOR_SPEED = 150;
 
-    /** The team that the player is on. **/
-    private Team team;
-
-    // CONSTANTS
+    // Grid
     public static final double ROW_X_OFFSET = -1.0;
     public static final double ROW_Y_OFFSET = 0.5;
     public static final double COL_X_OFFSET = 1.0;
@@ -25,7 +26,13 @@ public class BattlePanel extends JPanel {
     public static final double HEIGHT_Y_OFFSET = -1.15;
     public static final Color GRID_COLOR = new Color(240, 240, 240);
 
-    // VARIABLES
+    // ==== VARIABLES
+    /** The battle this BattlePanel is displaying. **/
+    private Battle battle;
+
+    /** The team that the player is on. **/
+    private Team team;
+
     // Camera
     private Number cameraRowPos = 4.0;
     private Number cameraColPos = 4.0;
@@ -40,7 +47,7 @@ public class BattlePanel extends JPanel {
     // Timers
     private final Timer screenRefreshTimer;
 
-    // Constructor
+    // ==== CONSTRUCTORS
     public BattlePanel(Battle battle) {
         this.battle = battle;
         this.team = battle.getTeam(0);
@@ -64,6 +71,7 @@ public class BattlePanel extends JPanel {
         setBackground(new Color(16,16,16));
     }
 
+    // ==== MAIN DRAW
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -127,7 +135,7 @@ public class BattlePanel extends JPanel {
         }
     }
 
-    // ======== DRAW FEATURES (statically)
+    // ==== FEATURES (static)
     /** Draw a tile. **/
     public static void drawTile(Graphics g, double x, double y, double z, Color color, Color fillColor){
         int[] xPoints = {
@@ -175,7 +183,7 @@ public class BattlePanel extends JPanel {
         drawInsetTile(g, x, y, z, inset, color, null);
     }
 
-    // ======== POSITIONING
+    // ==== POSITIONING
     /** Get the screen X position of a given row and col on the grid. **/
     public double getScreenX(double rowPos, double colPos){
         double relRow = rowPos - cameraRowPos.doubleValue();
@@ -199,38 +207,53 @@ public class BattlePanel extends JPanel {
         return (int)getScreenY(rowPos, colPos);
     }
 
-    // ======== CONTROL LISTENERS
+    // ==== CONTROL LISTENERS
     public class CursorUp extends AbstractAction{
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            moveCursor(0, -1);
-        }
-    }
-    public class CursorDown extends AbstractAction{
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            moveCursor(0, 1);
-        }
-    }
-    public class CursorLeft extends AbstractAction{
         @Override
         public void actionPerformed(ActionEvent e) {
             moveCursor(-1, 0);
         }
     }
-    public class CursorRight extends AbstractAction{
+    public class CursorDown extends AbstractAction{
         @Override
         public void actionPerformed(ActionEvent e) {
             moveCursor(1, 0);
         }
     }
+    public class CursorLeft extends AbstractAction{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            moveCursor(0, -1);
+        }
+    }
+    public class CursorRight extends AbstractAction{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            moveCursor(0, 1);
+        }
+    }
 
-    // ======== CONTROL METHODS
-    public void moveCursor(int c, int r){
-        if (cursorCol+c >= 0 && cursorCol+c < battle.getMap().numCols()
-                && cursorRow+r >= 0 && cursorRow+r < battle.getMap().numCols()){
-            cursorCol += c;
-            cursorRow += r;
+    // ==== CONTROL METHODS
+    public void moveCursor(int row, int col){
+        Map map = battle.getMap();
+        if (cursorRow+row >= 0 && cursorRow+row < map.numRows()
+                && cursorCol+col >= 0 && cursorCol+col < map.numCols()){
+            Tile tile = map.getTile(cursorRow, cursorCol);
+            if (tile != null) tile.onUnhover();
+
+            cursorRow += row;
+            cursorCol += col;
+
+            if (EASE_CURSOR){
+                cursorCameraRow = new AnimatedValue(CURSOR_SPEED, cursorCameraRow.doubleValue(), cursorRow);
+                cursorCameraCol = new AnimatedValue(CURSOR_SPEED, cursorCameraCol.doubleValue(), cursorCol);
+            } else {
+                cursorCameraRow = cursorCameraRow.doubleValue() + row;
+                cursorCameraCol = cursorCameraCol.doubleValue() + col;
+            }
+
+            Tile newTile = map.getTile(cursorRow, cursorCol);
+            if (newTile != null) newTile.onHover();
         }
     }
 }

@@ -1,9 +1,9 @@
 package lib.display;
 
 import lib.Battle;
+import lib.panels.BattlePanel;
 
 import javax.swing.*;
-import java.awt.*;
 
 public class BipoleIFrame extends JFrame {
     private JPanel panel;
