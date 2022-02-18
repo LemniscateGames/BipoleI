@@ -19,6 +19,8 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
     public static final boolean EASE_CURSOR = true;
     public static final int CURSOR_SPEED = 150;
     public static final double ZOOM_SCROLL_FACTOR = 0.8;
+    public static final int CAMERA_SPEED = 150;
+    public static final boolean CAMERA_FOLLOW_CURSOR = true;
 
     // Grid
     public static final double ROW_X_OFFSET = -1.0;
@@ -238,7 +240,10 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
     // mouse
     @Override
     public void mouseClicked(MouseEvent e) {
-
+        if (e.getButton() == 1){
+            RowColPoint clickGridPos = getGridPos(e.getX(), e.getY());
+            setCursor(clickGridPos.row, clickGridPos.col);
+        }
     }
 
     @Override
@@ -246,11 +251,6 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
         clickPoint = e.getPoint();
         clickCameraRowPos = cameraRowPos.doubleValue();
         clickCameraColPos = cameraColPos.doubleValue();
-
-        if (e.getButton() == 1){
-            RowColPoint clickGridPos = getGridPos(e.getX(), e.getY());
-            setCursor(clickGridPos.row, clickGridPos.col);
-        }
     }
 
     @Override
@@ -344,6 +344,8 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
 
             Tile newTile = map.getTile(cursorRow, cursorCol);
             if (newTile != null) newTile.onHover();
+
+            moveCameraToCursor();
         }
     }
 
@@ -367,6 +369,15 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
 
             Tile newTile = map.getTile(cursorRow, cursorCol);
             if (newTile != null) newTile.onHover();
+
+            moveCameraToCursor();
+        }
+    }
+
+    public void moveCameraToCursor(){
+        if (CAMERA_FOLLOW_CURSOR) {
+            cameraRowPos = new AnimatedValue(CAMERA_SPEED, cameraRowPos.doubleValue(), cursorRow);
+            cameraColPos = new AnimatedValue(CAMERA_SPEED, cameraColPos.doubleValue(), cursorCol);
         }
     }
 }
