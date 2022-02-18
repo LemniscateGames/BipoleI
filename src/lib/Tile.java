@@ -14,4 +14,7 @@ public interface Tile {
 
     /** Run when the cursor is moved off of hovering over this tile. **/
     void onUnhover();
+
+    /** Whether or not this tile draws a tile base (colored border). **/
+    boolean hasBorder();
 }

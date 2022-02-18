@@ -54,4 +54,9 @@ public class ClaimedTile implements Tile {
 
         BattlePanel.drawTile(g, x, y, z, teamColor, team.getTileFillColor());
     }
+
+    @Override
+    public boolean hasBorder() {
+        return true;
+    }
 }

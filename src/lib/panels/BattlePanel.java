@@ -71,12 +71,16 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
 
         // keyboard
         getInputMap().put(KeyStroke.getKeyStroke("UP"), "up");
+        getInputMap().put(KeyStroke.getKeyStroke("W"), "up");
         getActionMap().put("up", new CursorUp());
         getInputMap().put(KeyStroke.getKeyStroke("DOWN"), "down");
+        getInputMap().put(KeyStroke.getKeyStroke("S"), "down");
         getActionMap().put("down", new CursorDown());
         getInputMap().put(KeyStroke.getKeyStroke("LEFT"), "left");
+        getInputMap().put(KeyStroke.getKeyStroke("A"), "left");
         getActionMap().put("left", new CursorLeft());
         getInputMap().put(KeyStroke.getKeyStroke("RIGHT"), "right");
+        getInputMap().put(KeyStroke.getKeyStroke("D"), "right");
         getActionMap().put("right", new CursorRight());
 
         // other
@@ -98,25 +102,34 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
         for (int r=0; r<numRows; r++){
             for (int c=0; c<numCols; c++){
                 // Draw west side of tile
-                g.drawLine(getScreenIntX(r, c), getScreenIntY(r, c),
-                        getScreenIntX(r+1, c), getScreenIntY(r+1, c));
+                if (map.noBorderedTile(r, c) && map.noBorderedTile(r, c-1)){
+                    g.drawLine(getScreenIntX(r, c), getScreenIntY(r, c),
+                            getScreenIntX(r+1, c), getScreenIntY(r+1, c));
+                }
 
                 // Draw north side of tile
-                g.drawLine(getScreenIntX(r, c), getScreenIntY(r, c),
-                        getScreenIntX(r, c+1), getScreenIntY(r, c+1));
+                if (map.noBorderedTile(r, c) && map.noBorderedTile(r-1, c)){
+                    g.drawLine(getScreenIntX(r, c), getScreenIntY(r, c),
+                            getScreenIntX(r, c+1), getScreenIntY(r, c+1));
+                }
+
             }
         }
 
         // Draw east borders of easternmost tiles
         for (int r=0; r<numRows; r++){
-            g.drawLine(getScreenIntX(r, numCols), getScreenIntY(r, numCols),
-                    getScreenIntX(r+1, numCols), getScreenIntY(r+1, numCols));
+            if (map.noBorderedTile(r, numCols)){
+                g.drawLine(getScreenIntX(r, numCols), getScreenIntY(r, numCols),
+                        getScreenIntX(r+1, numCols), getScreenIntY(r+1, numCols));
+            }
         }
 
         // Draw south borders of southernmost tiles
         for (int c=0; c<numCols; c++){
-            g.drawLine(getScreenIntX(numRows, c), getScreenIntY(numRows, c),
-                    getScreenIntX(numRows, c+1), getScreenIntY(numRows, c+1));
+            if (map.noBorderedTile(numRows, c)){
+                g.drawLine(getScreenIntX(numRows, c), getScreenIntY(numRows, c),
+                        getScreenIntX(numRows, c+1), getScreenIntY(numRows, c+1));
+            }
         }
 
         // ==== Draw all tile bases
@@ -292,8 +305,6 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        System.out.println("scrolled "+e);
-
         double scale = Math.pow(ZOOM_SCROLL_FACTOR, e.getWheelRotation());
         zoom = zoom.doubleValue() * scale;
 
@@ -394,11 +405,6 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
 
             boolean cameraMoved = false;
 
-            System.out.println();
-            System.out.printf("{r=%d, c=%d}%n", cursorRow, cursorCol);
-            System.out.printf("[r=%f, c=%f]%n", cameraRowPos.doubleValue(), cameraColPos.doubleValue());
-            System.out.println(x+", "+y);
-
             if (x < FOLLOW_X_MARGIN){
                 cameraX += x - FOLLOW_X_MARGIN; cameraMoved = true;
             } else if (x > getWidth()-FOLLOW_X_MARGIN){
@@ -416,10 +422,8 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
     }
 
     public void moveCameraToScreenPoint(int x, int y){
-        System.out.println("moving to "+x+", "+y);
         double row = getGridPosRow(x, y);
         double col = getGridPosCol(x, y);
-        System.out.printf("[r=%f, c=%f]%n", row, col);
         if (EASE_CAMERA){
             cameraRowPos = new AnimatedValue(CAMERA_SPEED, cameraRowPos.doubleValue(), row);
             cameraColPos = new AnimatedValue(CAMERA_SPEED, cameraColPos.doubleValue(), col);
