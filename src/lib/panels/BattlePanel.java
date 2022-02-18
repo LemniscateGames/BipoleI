@@ -233,6 +233,17 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
         return new RowColPoint((int)row, (int)col);
     }
 
+    public double getGridPosRow(int x, int y){
+        double relX = (x - getWidth()/2.0) / zoom.doubleValue();
+        double relY = (y - getHeight()/2.0) / zoom.doubleValue();
+        return (relX/ROW_X_OFFSET + relY/ROW_Y_OFFSET)/2 + cameraRowPos.doubleValue();
+    }
+    public double getGridPosCol(int x, int y){
+        double relX = (x - getWidth()/2.0) / zoom.doubleValue();
+        double relY = (y - getHeight()/2.0) / zoom.doubleValue();
+        return (relX/COL_X_OFFSET + relY/COL_Y_OFFSET)/2 + cameraColPos.doubleValue();
+    }
+
 
     // ==== CONTROL LISTENERS
     // mouse
@@ -372,35 +383,49 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
         }
     }
 
-    public static final int FOLLOW_X_MARGIN = 100;
+    public static final int FOLLOW_X_MARGIN = 150;
     public static final int FOLLOW_Y_MARGIN = 100;
     public void moveCameraToCursor(){
         if (CAMERA_FOLLOW_CURSOR) {
-            int x = getScreenIntX(cursorRow, cursorCol);
-            int y = getScreenIntY(cursorRow, cursorCol);
+            int cameraX = getScreenIntX(cameraRowPos.doubleValue(), cameraColPos.doubleValue());
+            int cameraY = getScreenIntY(cameraRowPos.doubleValue(), cameraColPos.doubleValue());
+            int x = getScreenIntX(cursorRow+0.5, cursorCol+0.5);
+            int y = getScreenIntY(cursorRow+0.5, cursorCol+0.5);
+
+            boolean cameraMoved = false;
+
+            System.out.println();
+            System.out.printf("{r=%d, c=%d}%n", cursorRow, cursorCol);
+            System.out.printf("[r=%f, c=%f]%n", cameraRowPos.doubleValue(), cameraColPos.doubleValue());
+            System.out.println(x+", "+y);
 
             if (x < FOLLOW_X_MARGIN){
-                moveCameraToScreenPoint(FOLLOW_X_MARGIN, y);
+                cameraX += x - FOLLOW_X_MARGIN; cameraMoved = true;
             } else if (x > getWidth()-FOLLOW_X_MARGIN){
-                moveCameraToScreenPoint(getWidth()-FOLLOW_X_MARGIN, y);
+                cameraX += x - getWidth()+FOLLOW_X_MARGIN; cameraMoved = true;
             }
 
-            if (y < FOLLOW_Y_MARGIN){
-                moveCameraToScreenPoint(x, FOLLOW_Y_MARGIN);
-            } else if (y > getHeight()-FOLLOW_Y_MARGIN){
-                moveCameraToScreenPoint(x, getHeight()-FOLLOW_Y_MARGIN);
+            if (y < FOLLOW_Y_MARGIN) {
+                cameraY += y - FOLLOW_Y_MARGIN; cameraMoved = true;
+            } else if (y > getHeight()-FOLLOW_Y_MARGIN) {
+                cameraY += y - getHeight()+FOLLOW_Y_MARGIN; cameraMoved = true;
             }
+
+            if (cameraMoved) moveCameraToScreenPoint(cameraX, cameraY);
         }
     }
 
     public void moveCameraToScreenPoint(int x, int y){
-        RowColPoint pos = getGridPos(x, y);
+        System.out.println("moving to "+x+", "+y);
+        double row = getGridPosRow(x, y);
+        double col = getGridPosCol(x, y);
+        System.out.printf("[r=%f, c=%f]%n", row, col);
         if (EASE_CAMERA){
-            cameraRowPos = new AnimatedValue(CAMERA_SPEED, cameraRowPos.doubleValue(), pos.row);
-            cameraColPos = new AnimatedValue(CAMERA_SPEED, cameraColPos.doubleValue(), pos.col);
+            cameraRowPos = new AnimatedValue(CAMERA_SPEED, cameraRowPos.doubleValue(), row);
+            cameraColPos = new AnimatedValue(CAMERA_SPEED, cameraColPos.doubleValue(), col);
         } else {
-            cameraRowPos = pos.row;
-            cameraColPos = pos.col;
+            cameraRowPos = row;
+            cameraColPos = col;
         }
     }
 }
