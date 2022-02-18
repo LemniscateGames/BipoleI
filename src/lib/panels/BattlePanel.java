@@ -5,7 +5,6 @@ import lib.Map;
 import lib.Team;
 import lib.Tile;
 import lib.display.AnimatedValue;
-import lib.display.TimingFunction;
 import lib.misc.RowColPoint;
 
 import javax.swing.*;
@@ -19,7 +18,8 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
     public static final boolean EASE_CURSOR = true;
     public static final int CURSOR_SPEED = 150;
     public static final double ZOOM_SCROLL_FACTOR = 0.8;
-    public static final int CAMERA_SPEED = 150;
+    public static final boolean EASE_CAMERA = true;
+    public static final int CAMERA_SPEED = 250;
     public static final boolean CAMERA_FOLLOW_CURSOR = true;
 
     // Grid
@@ -31,16 +31,10 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
     public static final Color GRID_COLOR = new Color(240, 240, 240);
 
     // ==== VARIABLES
-    /** The battle this BattlePanel is displaying. **/
-    private Battle battle;
-
-    /** The team that the player is on. **/
-    private Team team;
-
     // Camera
     private Number cameraRowPos = 4.0;
     private Number cameraColPos = 4.0;
-    private Number zoom = 64.0;
+    private Number zoom = 80.0;
 
     // Cursor
     private int cursorRow = 0;
@@ -54,6 +48,10 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
 
     // Timers
     private final Timer screenRefreshTimer;
+
+    // Other Variables
+    private Battle battle;
+    private Team team;
 
     // ==== CONSTRUCTORS
     public BattlePanel(Battle battle) {
@@ -116,7 +114,7 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
         }
 
         // Draw south borders of southernmost tiles
-        for (int c=0; c<numRows; c++){
+        for (int c=0; c<numCols; c++){
             g.drawLine(getScreenIntX(numRows, c), getScreenIntY(numRows, c),
                     getScreenIntX(numRows, c+1), getScreenIntY(numRows, c+1));
         }
@@ -374,10 +372,38 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
         }
     }
 
+    public static final int FOLLOW_X_MARGIN = 100;
+    public static final int FOLLOW_Y_MARGIN = 100;
     public void moveCameraToCursor(){
         if (CAMERA_FOLLOW_CURSOR) {
-            cameraRowPos = new AnimatedValue(CAMERA_SPEED, cameraRowPos.doubleValue(), cursorRow);
-            cameraColPos = new AnimatedValue(CAMERA_SPEED, cameraColPos.doubleValue(), cursorCol);
+            int x = getScreenIntX(cursorRow, cursorCol);
+            int y = getScreenIntY(cursorRow, cursorCol);
+
+            if (x < FOLLOW_X_MARGIN){
+                moveCameraToScreenPoint(FOLLOW_X_MARGIN, y);
+            } else if (x > getWidth()-FOLLOW_X_MARGIN){
+                moveCameraToScreenPoint(getWidth()-FOLLOW_X_MARGIN, y);
+            }
+
+            if (y < FOLLOW_Y_MARGIN){
+                moveCameraToScreenPoint(x, FOLLOW_Y_MARGIN);
+            } else if (y > getHeight()-FOLLOW_Y_MARGIN){
+                moveCameraToScreenPoint(x, getHeight()-FOLLOW_Y_MARGIN);
+            }
+        }
+    }
+
+    public void moveCameraToScreenPoint(int x, int y){
+        RowColPoint pos = getGridPos(x, y);
+        if (EASE_CAMERA){
+            cameraRowPos = new AnimatedValue(CAMERA_SPEED, cameraRowPos.doubleValue(), pos.row);
+            cameraColPos = new AnimatedValue(CAMERA_SPEED, cameraColPos.doubleValue(), pos.col);
+        } else {
+            cameraRowPos = pos.row;
+            cameraColPos = pos.col;
         }
     }
 }
+
+//            cameraRowPos = new AnimatedValue(CAMERA_SPEED, cameraRowPos.doubleValue(), cursorRow);
+//            cameraColPos = new AnimatedValue(CAMERA_SPEED, cameraColPos.doubleValue(), cursorCol);

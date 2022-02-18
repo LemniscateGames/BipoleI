@@ -3,8 +3,8 @@ package lib;
 public class Map {
     private Tile[][] tiles;
 
-    public Map(int height, int width){
-        tiles = new Tile[height][width];
+    public Map(int rows, int cols){
+        tiles = new Tile[rows][cols];
     }
 
     public void placeTile(Tile tile, int row, int col){
