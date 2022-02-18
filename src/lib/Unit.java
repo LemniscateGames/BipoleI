@@ -1,22 +1,22 @@
 package lib;
 
+import lib.display.shaperendering.ShapeOrtho3D;
+
 import java.awt.*;
 
 /** A unit. **/
 public abstract class Unit extends ClaimedTile {
-    public Unit(Team team) {
-        super(team);
-    }
-
     /** Hit points until defeated. **/
-    public abstract int getBaseHp();
-    /** Damage dealt to units when attacking. **/
-    public abstract int getBaseAtk();
-    /** Milliseconds until this unit becomes ready. **/
-    public abstract int getBaseDelay();
+    private int hp;
+    /** Damage dealt when attacking. **/
+    private int atk;
+    /** Amount of milliseconds before this unit becomes ready. **/
+    private int delay;
 
-    @Override
-    public void drawTileBase(Graphics g, double x, double y, double z) {
-
+    public Unit(Team team, int hp, int atk, int delay, ShapeOrtho3D... shapes) {
+        super(team, shapes);
+        this.hp = hp;
+        this.atk = atk;
+        this.delay = delay;
     }
 }

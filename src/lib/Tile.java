@@ -2,6 +2,7 @@ package lib;
 
 import java.awt.*;
 
+/** Any tile that can be placed on a map. **/
 public interface Tile {
     /** Draw the base of this tile. Drawn below the cursor. **/
     void drawTileBase(Graphics g, double x, double y, double z);

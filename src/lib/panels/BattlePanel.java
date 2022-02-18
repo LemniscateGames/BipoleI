@@ -394,27 +394,29 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
         }
     }
 
-    public static final int FOLLOW_X_MARGIN = 150;
-    public static final int FOLLOW_Y_MARGIN = 100;
+    public static final double FOLLOW_X_MARGIN = 2.0;
+    public static final double FOLLOW_Y_MARGIN = 1.5;
     public void moveCameraToCursor(){
         if (CAMERA_FOLLOW_CURSOR) {
             int cameraX = getScreenIntX(cameraRowPos.doubleValue(), cameraColPos.doubleValue());
             int cameraY = getScreenIntY(cameraRowPos.doubleValue(), cameraColPos.doubleValue());
             int x = getScreenIntX(cursorRow+0.5, cursorCol+0.5);
             int y = getScreenIntY(cursorRow+0.5, cursorCol+0.5);
+            int followXScreen = (int)(zoom.doubleValue()*FOLLOW_X_MARGIN);
+            int followYSCreen = (int)(zoom.doubleValue()*FOLLOW_Y_MARGIN);
 
             boolean cameraMoved = false;
 
-            if (x < FOLLOW_X_MARGIN){
-                cameraX += x - FOLLOW_X_MARGIN; cameraMoved = true;
-            } else if (x > getWidth()-FOLLOW_X_MARGIN){
-                cameraX += x - getWidth()+FOLLOW_X_MARGIN; cameraMoved = true;
+            if (x < followXScreen){
+                cameraX += x - followXScreen; cameraMoved = true;
+            } else if (x > getWidth()-followXScreen){
+                cameraX += x - getWidth()+followXScreen; cameraMoved = true;
             }
 
-            if (y < FOLLOW_Y_MARGIN) {
-                cameraY += y - FOLLOW_Y_MARGIN; cameraMoved = true;
-            } else if (y > getHeight()-FOLLOW_Y_MARGIN) {
-                cameraY += y - getHeight()+FOLLOW_Y_MARGIN; cameraMoved = true;
+            if (y < followYSCreen) {
+                cameraY += y - followYSCreen; cameraMoved = true;
+            } else if (y > getHeight()-followYSCreen) {
+                cameraY += y - getHeight()+followYSCreen; cameraMoved = true;
             }
 
             if (cameraMoved) moveCameraToScreenPoint(cameraX, cameraY);

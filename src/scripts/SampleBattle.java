@@ -5,28 +5,24 @@ import lib.ClaimedTile;
 import lib.Map;
 import lib.Team;
 import lib.display.BipoleIFrame;
+import lib.units.Soldier;
 
 public class SampleBattle {
     public static void main(String[] args) {
         BipoleIFrame frame = new BipoleIFrame();
 
-        int rows = 10 + (int)(Math.random()*21);
-        int cols = 10 + (int)(Math.random()*21);
-
-        Map map = new Map(rows, cols);
+        Map map = new Map(8, 8);
         Team allies = Team.defaultAllies();
         Team enemies = Team.defaultEnemies();
         Battle battle = new Battle(map, allies, enemies);
 
-        // Place claimedTiles randomly
-        // place allied claimedTiles
-        for (int i=0; i<15; i++){
-            map.placeTile(new ClaimedTile(allies), (int)(Math.random()*rows), (int)(Math.random()*cols));
-        }
-        // place enemy claimedTiles
-        for (int i=0; i<15; i++){
-            map.placeTile(new ClaimedTile(enemies), (int)(Math.random()*8), (int)(Math.random()*8));
-        }
+        map.placeTile(new Soldier(allies), 7, 0);
+        map.placeTile(new ClaimedTile(allies), 6, 0);
+        map.placeTile(new ClaimedTile(allies), 7, 1);
+
+        map.placeTile(new Soldier(enemies), 0, 7);
+        map.placeTile(new ClaimedTile(enemies), 0, 6);
+        map.placeTile(new ClaimedTile(enemies), 1, 7);
 
         frame.loadBattle(battle);
     }
