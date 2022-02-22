@@ -8,18 +8,24 @@ import lib.display.shaperendering.ShapeOrtho3D;
 
 public class RectangularPrism extends ShapeOrtho3D {
     private final double width, length, height;
+    private final boolean noTop, noBottom;
 
-    public RectangularPrism(Point3D position, double width, double length, double height) {
-        super(position);
+    public RectangularPrism(double r, double c, double h, double width, double length, double height, boolean noTop, boolean noBottom) {
+        super(new Point3D(r, c, h));
 
         this.width = width;
         this.length = length;
         this.height = height;
+        this.noTop = noTop;
+        this.noBottom = noBottom;
 
         generateShape();
     }
+    public RectangularPrism(double r, double c, double h, double width, double length, double height){
+        this(r, c, h, width, length, height, false, false);
+    }
     public RectangularPrism(double width, double length, double height){
-        this(new Point3D(0,0,0), width, length, height);
+        this(0,0,0, width, length, height);
     }
 
     @Override
@@ -42,10 +48,27 @@ public class RectangularPrism extends ShapeOrtho3D {
 
     @Override
     public Segment3D[] generateSegments() {
-        return generateSegmentsFromArrays(new int[][]{
-                {0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 0},
-                {0, 6}, {2, 6}, {4, 6}
-        });
+        if (noTop && noBottom){
+            return generateSegmentsFromArrays(new int[][]{
+                            {1, 2},                 {4, 5},
+                    {0, 6}
+            });
+        } else if (noTop){
+            return generateSegmentsFromArrays(new int[][]{
+                    {0, 1}, {1, 2},                 {4, 5}, {5, 0},
+                    {0, 6},
+            });
+        } else if (noBottom) {
+            return generateSegmentsFromArrays(new int[][]{
+                            {1, 2}, {2, 3}, {3, 4}, {4, 5},
+                    {0, 6}, {2, 6}, {4, 6}
+            });
+        } else {
+            return generateSegmentsFromArrays(new int[][]{
+                    {0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 0},
+                    {0, 6}, {2, 6}, {4, 6}
+            });
+        }
     }
 
     @Override

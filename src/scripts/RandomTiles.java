@@ -5,6 +5,7 @@ import lib.ClaimedTile;
 import lib.Map;
 import lib.Team;
 import lib.display.BipoleIFrame;
+import lib.units.EmptyLand;
 import lib.units.Soldier;
 
 public class RandomTiles {
@@ -21,7 +22,7 @@ public class RandomTiles {
 
         // place enemy claimedTiles
         for (int i=0; i<15; i++){
-            map.placeTile(new ClaimedTile(enemies), (int)(Math.random()*rows), (int)(Math.random()*rows));
+            map.placeTile(new EmptyLand(enemies), (int)(Math.random()*rows), (int)(Math.random()*rows));
         }
         // place enemy units
         for (int i=0; i<3; i++){
@@ -31,7 +32,7 @@ public class RandomTiles {
         // == Place claimedTiles randomly
         // place allied claimedTiles
         for (int i=0; i<15; i++){
-            map.placeTile(new ClaimedTile(allies), (int)(Math.random()*rows/2), (int)(Math.random()*cols/2));
+            map.placeTile(new EmptyLand(allies), (int)(Math.random()*rows/2), (int)(Math.random()*cols/2));
         }
         // place allied units
         for (int i=0; i<3; i++){

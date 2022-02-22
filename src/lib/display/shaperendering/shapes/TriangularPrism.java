@@ -9,12 +9,17 @@ import lib.display.shaperendering.ShapeOrtho3D;
 public class TriangularPrism extends ShapeOrtho3D {
     private final double width, length, height;
 
-    public TriangularPrism(Point3D position, int width, int length, int height) {
-        super(position);
+    public TriangularPrism(double r, double c, double h, double width, double length, double height) {
+        super(new Point3D(r, c, h));
 
         this.width = width;
         this.length = length;
         this.height = height;
+
+        generateShape();
+    }
+    public TriangularPrism(double width, double length, double height){
+        this(0,0,0, width, length, height);
     }
 
     @Override

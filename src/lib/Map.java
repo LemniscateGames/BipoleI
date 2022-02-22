@@ -1,7 +1,7 @@
 package lib;
 
 public class Map {
-    private Tile[][] tiles;
+    private final Tile[][] tiles;
 
     public Map(int rows, int cols){
         tiles = new Tile[rows][cols];
@@ -9,6 +9,7 @@ public class Map {
 
     public void placeTile(Tile tile, int row, int col){
         tiles[row][col] = tile;
+        tile.onPlace(this, row, col);
         System.out.printf("placed %s at %d, %d%n", tile, row, col);
     }
 

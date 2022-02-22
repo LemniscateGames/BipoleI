@@ -6,11 +6,16 @@ import lib.Team;
 import lib.Tile;
 import lib.display.AnimatedValue;
 import lib.misc.RowColPoint;
+import lib.ui.ElementBox;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+
+import static lib.ui.ElementBox.Alignment.CENTER;
+import static lib.ui.ElementBox.Alignment.NONE;
 
 public class BattlePanel extends JPanel implements MouseInputListener, MouseMotionListener, MouseWheelListener {
     // ==== CONSTANTS
@@ -29,6 +34,10 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
     public static final double COL_Y_OFFSET = 0.5;
     public static final double HEIGHT_Y_OFFSET = -1.15;
     public static final Color GRID_COLOR = new Color(240, 240, 240);
+
+    // UI
+    public static final Color BAR_BG_COLOR = new Color(30, 30, 30, 200);
+    public static final Color BAR_BORDER_COLOR = new Color(8,8,8);
 
     // ==== VARIABLES
     // Camera
@@ -49,6 +58,11 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
     // Timers
     private final Timer screenRefreshTimer;
 
+    // UI Elements
+    /** All elements that should be drawn when this component is painted. **/
+    private final ArrayList<ElementBox> drawElements;
+    private final ElementBox pointCounter;
+
     // Other Variables
     private Battle battle;
     private Team team;
@@ -58,12 +72,20 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
         this.battle = battle;
         this.team = battle.getTeam(0);
 
-        // Initialize screen refresh timer
+        // ---- Initialize screen refresh timer
         ActionListener updateScreen = evt -> repaint();
         screenRefreshTimer = new Timer(20, updateScreen);
         screenRefreshTimer.start();
 
-        // Controls
+        // ---- Create UI elements
+        drawElements = new ArrayList<>();
+        // point counter
+        pointCounter = new ElementBox(0, 0, 120, 40);
+        pointCounter.setFillPanelX(true);
+        pointCounter.setxAlign(CENTER);
+        addElement(pointCounter);
+
+        // ---- Controls
         // mouse
         addMouseListener(this);
         addMouseMotionListener(this);
@@ -83,7 +105,7 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
         getInputMap().put(KeyStroke.getKeyStroke("D"), "right");
         getActionMap().put("right", new CursorRight());
 
-        // other
+        // ---- other
         setBackground(new Color(16,16,16));
     }
 
@@ -92,6 +114,20 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
+        // Draw the map and all its tiles and their UI.
+        drawMap(g);
+
+        // Update the point counter's text.
+        pointCounter.setText(team.getPoints()+" pts");
+
+        // Draw all elements
+        for (ElementBox element : drawElements){
+            element.draw(g);
+        }
+    }
+
+    /** Draw the whole map and all its tiles, big ol function so im seperating it. **/
+    public void drawMap(Graphics g){
         Map map = battle.getMap();
         int numRows = map.numRows();
         int numCols = map.numCols();
@@ -118,7 +154,7 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
 
         // Draw east borders of easternmost tiles
         for (int r=0; r<numRows; r++){
-            if (map.noBorderedTile(r, numCols)){
+            if (map.noBorderedTile(r, numCols-1)){
                 g.drawLine(getScreenIntX(r, numCols), getScreenIntY(r, numCols),
                         getScreenIntX(r+1, numCols), getScreenIntY(r+1, numCols));
             }
@@ -126,7 +162,7 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
 
         // Draw south borders of southernmost tiles
         for (int c=0; c<numCols; c++){
-            if (map.noBorderedTile(numRows, c)){
+            if (map.noBorderedTile(numRows-1, c)){
                 g.drawLine(getScreenIntX(numRows, c), getScreenIntY(numRows, c),
                         getScreenIntX(numRows, c+1), getScreenIntY(numRows, c+1));
             }
@@ -155,6 +191,16 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
                 Tile tile = map.getTile(r, c);
                 if (tile != null){
                     tile.draw(g, getScreenX(r, c), getScreenY(r, c), zoom.doubleValue());
+                }
+            }
+        }
+
+        // ==== Draw UI for all tiles after all shapes & other non UI graphics are drawn
+        for (int r=0; r<numRows; r++){
+            for (int c=0; c<numCols; c++){
+                Tile tile = map.getTile(r, c);
+                if (tile != null){
+                    tile.drawUI(g, getScreenX(r, c), getScreenY(r, c), zoom.doubleValue());
                 }
             }
         }
@@ -206,6 +252,31 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
     }
     public static void drawInsetTile(Graphics g, double x, double y, double z, double inset, Color color){
         drawInsetTile(g, x, y, z, inset, color, null);
+    }
+
+    // ==== USER INTERFACE
+    public void addElement(ElementBox element){
+        drawElements.add(element);
+        element.setPanel(this);
+    }
+
+    public static void drawBar(Graphics g, double x, double y, double z, double percent, Color fillColor){
+        y += (int)(z*0.75);
+
+        int width = (int)z;
+        int height = (int)(z*0.1);
+        int hw = width/2;
+        int hh = height/2;
+        int barWidth = (int)(z*percent);
+
+        g.setColor(BAR_BG_COLOR);
+        g.fillRect((int)x-hw, (int)y-hh, width, height);
+
+        g.setColor(fillColor);
+        g.fillRect((int)x-hw, (int)y-hh, barWidth, height);
+
+        g.setColor(BAR_BORDER_COLOR);
+        g.drawRect((int)x-hw, (int)y-hh, width, height);
     }
 
     // ==== POSITIONING

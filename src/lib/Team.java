@@ -12,12 +12,28 @@ public class Team {
     // Colors generated during initialization that are related to core colors
     private Color tileFillColor;
 
+    /** The amount of points this team has. **/
+    private int points;
+
     public Team(Color color, Color unitColor, Color pointColor) {
         this.color = color;
         this.unitColor = unitColor;
         this.pointColor = pointColor;
 
         this.tileFillColor = makeTransparent(color, 0.3);
+    }
+
+    // Interaction
+    public void addPoints(int amount){
+        points += amount;
+    }
+    public boolean subtractPoints(int amount){
+        if (amount >= points){
+            points -= amount;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     // Accessors
@@ -35,6 +51,10 @@ public class Team {
 
     public Color getTileFillColor() {
         return tileFillColor;
+    }
+
+    public int getPoints() {
+        return points;
     }
 
     // Utility

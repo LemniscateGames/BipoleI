@@ -65,6 +65,10 @@ public abstract class ShapeOrtho3D {
         }
     }
 
+    public Point3D getPosition() {
+        return position;
+    }
+
     // point generation utility
     public static Point3D[] generatePointsFromArray(double[][] pointArrs){
         Point3D[] points = new Point3D[pointArrs.length];

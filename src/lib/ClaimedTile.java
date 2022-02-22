@@ -7,9 +7,15 @@ import java.awt.*;
 
 import static lib.display.ColorUtils.blendColors;
 
-public class ClaimedTile extends GeometryTile {
+public abstract class ClaimedTile extends GeometryTile {
     /** The team that claimed this tile. **/
-    private Team team;
+    private final Team team;
+    /** The map this unit is placed on. Set when onPlace() is called. **/
+    private Map map;
+    /** This tile's row on the map it is placed on. **/
+    private int row;
+    /** This tile's column on the map it is placed on. **/
+    private int column;
 
     public ClaimedTile(Team team, ShapeOrtho3D... shapes){
         super(shapes);
@@ -17,8 +23,14 @@ public class ClaimedTile extends GeometryTile {
     }
 
     @Override
-    public void drawTileBase(Graphics g, double x, double y, double z) {
+    public void onPlace(Map map, int r, int c) {
+        this.map = map;
+        row = r;
+        column = c;
+    }
 
+    @Override
+    public void drawTileBase(Graphics g, double x, double y, double z) {
         BattlePanel.drawTile(g, x, y, z, getColor(), team.getTileFillColor());
     }
 
@@ -44,5 +56,14 @@ public class ClaimedTile extends GeometryTile {
     // accessors
     public Team getTeam() {
         return team;
+    }
+    public Map getMap() {
+        return map;
+    }
+    public int getRow() {
+        return row;
+    }
+    public int getColumn() {
+        return column;
     }
 }
