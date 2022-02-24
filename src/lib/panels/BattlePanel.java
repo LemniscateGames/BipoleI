@@ -389,11 +389,18 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
 
     @Override
     public void mouseMoved(MouseEvent e) {
-//        RowColPoint mouseGridPos = getGridPos(e.getX(), e.getY());
-//        if (mouseRow != mouseGridPos.row || mouseCol != mouseGridPos.col){
-//            battle.getMap().getTile(mouseRow, mouseCol).onMouseUnhover();
-//            battle.getMap().getTile(mouseGridPos.row, mouseGridPos.col).onMouseHover();
-//        }
+        RowColPoint mouseGridPos = getGridPos(e.getX(), e.getY());
+        
+        if (mouseRow != mouseGridPos.row || mouseCol != mouseGridPos.col){
+            Tile unhoverTile = battle.getMap().getTile(mouseRow, mouseCol);
+            if (unhoverTile != null) unhoverTile.onMouseUnhover();
+
+            Tile hoverTile = battle.getMap().getTile(mouseGridPos.row, mouseGridPos.col);
+            if (hoverTile != null) hoverTile.onMouseHover();
+
+            mouseRow = mouseGridPos.row;
+            mouseCol = mouseGridPos.col;
+        }
     }
 
     @Override

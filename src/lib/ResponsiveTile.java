@@ -66,6 +66,11 @@ public abstract class ResponsiveTile implements Tile {
         saturation = new AnimatedValue(speed, saturation.doubleValue(), value);
     }
 
+    @Override
+    public void drawBelowGrid(Graphics g, double x, double y, double z) {
+
+    }
+
     public abstract Color getColor();
 
     public abstract Color getTileColor();
@@ -85,8 +90,11 @@ public abstract class ResponsiveTile implements Tile {
         this.saturation = saturation;
     }
 
-    @Override
-    public void drawBelowGrid(Graphics g, double x, double y, double z) {
+    public boolean isHovered() {
+        return isHovered;
+    }
 
+    public boolean isMouseHovered() {
+        return isMouseHovered;
     }
 }

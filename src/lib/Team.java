@@ -39,7 +39,15 @@ public class Team {
     }
 
     public Color getColor(double brightness, double saturation){
-        Color newColor = new Color(color.getRed(), color.getGreen(), color.getBlue());
+        return generateColor(brightness, saturation, color);
+    }
+
+    public Color getTileFillColor(double brightness, double saturation) {
+        return generateColor(brightness, saturation, tileFillColor);
+    }
+
+    private Color generateColor(double brightness, double saturation, Color color) {
+        Color newColor = new Color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
 
         if (brightness > 0){
             newColor = blendColors(newColor, Color.WHITE, brightness);
