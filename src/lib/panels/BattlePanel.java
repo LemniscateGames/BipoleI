@@ -1,9 +1,6 @@
 package lib.panels;
 
-import lib.Battle;
-import lib.Map;
-import lib.Team;
-import lib.Tile;
+import lib.*;
 import lib.display.AnimatedValue;
 import lib.misc.RowColPoint;
 import lib.shop.Shop;
@@ -13,7 +10,6 @@ import javax.swing.*;
 import javax.swing.event.MouseInputListener;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
 
 import static lib.ui.ElementBox.Alignment.CENTER;
 
@@ -50,6 +46,8 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     private int cursorCol = 0;
     private Number cursorCameraRow = 0;
     private Number cursorCameraCol = 0;
+    private int mouseRow = 0;
+    private int mouseCol = 0;
 
     // Controls
     private Point clickPoint;
@@ -94,16 +92,19 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         // keyboard
         super.getInputMap().put(KeyStroke.getKeyStroke("UP"), "up");
         super.getInputMap().put(KeyStroke.getKeyStroke("W"), "up");
-        super.getActionMap().put("up", new CursorUp());
+        super.getActionMap().put("up", new CursorUpAction());
         super.getInputMap().put(KeyStroke.getKeyStroke("DOWN"), "down");
         super.getInputMap().put(KeyStroke.getKeyStroke("S"), "down");
-        super.getActionMap().put("down", new CursorDown());
+        super.getActionMap().put("down", new CursorDownAction());
         super.getInputMap().put(KeyStroke.getKeyStroke("LEFT"), "left");
         super.getInputMap().put(KeyStroke.getKeyStroke("A"), "left");
-        super.getActionMap().put("left", new CursorLeft());
+        super.getActionMap().put("left", new CursorLeftAction());
         super.getInputMap().put(KeyStroke.getKeyStroke("RIGHT"), "right");
         super.getInputMap().put(KeyStroke.getKeyStroke("D"), "right");
-        super.getActionMap().put("right", new CursorRight());
+        super.getActionMap().put("right", new CursorRightAction());
+
+        super.getInputMap().put(KeyStroke.getKeyStroke("Z"), "interact");
+        super.getActionMap().put("interact", new InteractAction());
 
         // ---- other
         super.setBackground(new Color(16,16,16));
@@ -126,10 +127,20 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         Map map = battle.getMap();
         int numRows = map.numRows();
         int numCols = map.numCols();
-        g.setColor(GRID_COLOR);
+
+        // ==== Draw everything that goes below the grid
+        for (int r=0; r<numRows; r++){
+            for (int c=0; c<numCols; c++){
+                Tile tile = map.getTile(r, c);
+                if (tile != null){
+                    tile.drawBelowGrid(g, getScreenX(r, c), getScreenY(r, c), zoom.doubleValue());
+                }
+            }
+        }
 
         // ==== Draw white map grid
         // Draw west and north side of all tiles
+        g.setColor(GRID_COLOR);
         for (int r=0; r<numRows; r++){
             for (int c=0; c<numCols; c++){
                 // Draw west side of tile
@@ -273,7 +284,8 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         g.drawRect((int)x-hw, (int)y-hh, width, height);
     }
 
-    // ==== POSITIONING
+    // ==== INFORMATION
+    // Positioning
     /** Get the screen X position of a given row and col on the grid. **/
     public double getScreenX(double rowPos, double colPos){
         double relRow = rowPos - cameraRowPos.doubleValue();
@@ -322,6 +334,18 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         return (relX/COL_X_OFFSET + relY/COL_Y_OFFSET)/2 + cameraColPos.doubleValue();
     }
 
+    // Game data
+    public Tile cursorTile(){
+        return battle.getMap().getTile(cursorRow, cursorCol);
+    }
+    public Unit cursorUnit(){
+        Tile tile = battle.getMap().getTile(cursorRow, cursorCol);
+        if (tile instanceof Unit){
+            return (Unit) tile;
+        }
+        return null;
+    }
+
 
     // ==== CONTROL LISTENERS
     // mouse
@@ -365,7 +389,11 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
 
     @Override
     public void mouseMoved(MouseEvent e) {
-
+//        RowColPoint mouseGridPos = getGridPos(e.getX(), e.getY());
+//        if (mouseRow != mouseGridPos.row || mouseCol != mouseGridPos.col){
+//            battle.getMap().getTile(mouseRow, mouseCol).onMouseUnhover();
+//            battle.getMap().getTile(mouseGridPos.row, mouseGridPos.col).onMouseHover();
+//        }
     }
 
     @Override
@@ -383,32 +411,39 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     }
 
     // keyboard
-    public class CursorUp extends AbstractAction{
+    public class InteractAction extends AbstractAction{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            interactWithTile(cursorRow, cursorCol);
+        }
+    }
+
+    public class CursorUpAction extends AbstractAction{
         @Override
         public void actionPerformed(ActionEvent e) {
             moveCursor(-1, 0);
         }
     }
-    public class CursorDown extends AbstractAction{
+    public class CursorDownAction extends AbstractAction{
         @Override
         public void actionPerformed(ActionEvent e) {
             moveCursor(1, 0);
         }
     }
-    public class CursorLeft extends AbstractAction{
+    public class CursorLeftAction extends AbstractAction{
         @Override
         public void actionPerformed(ActionEvent e) {
             moveCursor(0, -1);
         }
     }
-    public class CursorRight extends AbstractAction{
+    public class CursorRightAction extends AbstractAction{
         @Override
         public void actionPerformed(ActionEvent e) {
             moveCursor(0, 1);
         }
     }
 
-    // ==== CONTROL METHODS
+    // ==== USER INTERACTION METHODS (called via controls)
     public void moveCursor(int row, int col){
         Map map = battle.getMap();
         if (cursorRow+row >= 0 && cursorRow+row < map.numRows()
@@ -474,8 +509,8 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
 
             if (x < followXScreen){
                 cameraX += x - followXScreen; cameraMoved = true;
-            } else if (x > super.getWidth()-followXScreen){
-                cameraX += x - super.getWidth()+followXScreen; cameraMoved = true;
+            } else if (x > super.getWidth()-followXScreen-Shop.SHOP_WIDTH){
+                cameraX += x - super.getWidth()+followXScreen+Shop.SHOP_WIDTH; cameraMoved = true;
             }
 
             if (y < followYSCreen) {
@@ -499,6 +534,36 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
             cameraColPos = col;
         }
     }
+
+    public void interactWithTile(int row, int col){
+        Tile selectedTile = cursorTile();
+
+        // If an emtpy tile is interacted with, start contesting it if there is an adjacent tile and it can be afforded
+        if (selectedTile == null
+                && battle.getMap().hasAdjacentOwnedTile(team, row, col)
+                && team.subtractPoints(1)){
+            battle.getMap().placeTile(new ContestedTile(team), row, col);
+
+        }
+        // Contest a tile that is already bing contested if a contest tile is interacted with
+        else if (selectedTile instanceof ContestedTile){
+            ContestedTile contestedTile = (ContestedTile) selectedTile;
+            contestedTile.contest(team);
+        }
+
+    }
+
+    // ======== Utility
+    public static void drawCenteredString(Graphics g, Rectangle rect, String text, Font font, Color textColor) {
+        FontMetrics metrics = g.getFontMetrics(font);
+        int x = rect.x + (rect.width - metrics.stringWidth(text)) / 2;
+        int y = rect.y + ((rect.height - metrics.getHeight()) / 2) + metrics.getAscent();
+
+        g.setFont(font);
+        if (textColor != null) g.setColor(textColor);
+        g.drawString(text, x, y);
+    }
+
 }
 
 //            cameraRowPos = new AnimatedValue(CAMERA_SPEED, cameraRowPos.doubleValue(), cursorRow);

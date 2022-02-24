@@ -13,7 +13,7 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     // ------------ FIELDS
     // ======== Constants
     public static final Color READINESS_COLOR = new Color(240, 240, 240, 200);
-    public static final double UNREADY_SATURATION = -0.25;
+    public static final double UNREADY_SATURATION = -0.4;
 
     // ======== Stats
     /** Value in points of this unit.
@@ -103,6 +103,13 @@ public abstract class Unit extends ClaimedTile implements Buyable {
         if ((canAttack || autoAct) && !isReady){
             BattlePanel.drawBar(g, x, y, z, readinessPercent(), READINESS_COLOR);
         }
+    }
+
+    @Override
+    public void draw(Graphics g, double x, double y, double z, boolean dim) {
+//        setBrightness(dim ? -0.5 : 0.0);
+        setSaturation(dim ? -0.5 : 0.0);
+        draw(g,x,y,z);
     }
 
     // ======== Misc

@@ -12,10 +12,11 @@ import java.util.ArrayList;
 public class Shop {
     // === constants
     public static final int SHOP_TOP_PADDING = 16;
-    public static final int SHOP_SIDE_PADDING = 4;
+    public static final int SHOP_LEFT_PADDING = 6;
+    public static final int SHOP_RIGHT_PADDING = 6;
     public static final int SHOP_INNER_WIDTH = 128;
-    public static final int SHOP_WIDTH = SHOP_INNER_WIDTH + SHOP_SIDE_PADDING*2;
-    public static final int SHOP_ITEM_MARGIN = 4;
+    public static final int SHOP_WIDTH = SHOP_INNER_WIDTH + SHOP_LEFT_PADDING + SHOP_RIGHT_PADDING;
+    public static final int SHOP_ITEM_MARGIN = 6;
 
     public static final int COLS = 2;
     public static final int SHOP_ITEM_WIDTH = (SHOP_INNER_WIDTH /COLS) - SHOP_ITEM_MARGIN*2;
@@ -23,13 +24,15 @@ public class Shop {
     public static final int SHOP_ITEM_HEIGHT = SHOP_ITEM_WIDTH + SHOP_ITEM_TEXT_SPACE;
 
     // === fields
+    private final Team team;
     private final ArrayList<ShopItem> items;
 
     // elements
     private ElementBox shopBodyElement;
     private ArrayList<ElementBox> itemElements;
 
-    public Shop(){
+    public Shop(Team team){
+        this.team = team;
         this.items = new ArrayList<>();
     }
 
@@ -74,14 +77,19 @@ public class Shop {
             itemElement.setxAlign(ElementBox.Alignment.START);
             itemElement.setyAlign(ElementBox.Alignment.START);
 
-            itemElement.setLeft(SHOP_SIDE_PADDING + (SHOP_ITEM_MARGIN*2 + SHOP_ITEM_WIDTH)*col + SHOP_ITEM_MARGIN);
+            itemElement.setLeft(SHOP_LEFT_PADDING + (SHOP_ITEM_MARGIN*2 + SHOP_ITEM_WIDTH)*col + SHOP_ITEM_MARGIN);
             itemElement.setTop(SHOP_TOP_PADDING + (SHOP_ITEM_MARGIN*2 + SHOP_ITEM_HEIGHT)*row + SHOP_ITEM_MARGIN);
         }
     }
 
+    // Accessors
+    public Team getTeam() {
+        return team;
+    }
+
     // Utility
     public static Shop generateDefaultShop(BattlePanel panel, Team team){
-        Shop shop = new Shop();
+        Shop shop = new Shop(team);
 
         shop.addItem(new Soldier(team));
         shop.addItem(new Castle(team));

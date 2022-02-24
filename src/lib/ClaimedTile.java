@@ -31,7 +31,7 @@ public abstract class ClaimedTile extends GeometryTile {
 
     @Override
     public void drawTileBase(Graphics g, double x, double y, double z) {
-        BattlePanel.drawTile(g, x, y, z, getColor(), team.getTileFillColor());
+        BattlePanel.drawTile(g, x, y, z, getTileColor(), team.getTileFillColor());
     }
 
     @Override
@@ -41,21 +41,12 @@ public abstract class ClaimedTile extends GeometryTile {
 
     @Override
     public Color getColor() {
-        Color color = team.getColor();
+        return team.getColor(getBrightness().doubleValue(), getSaturation().doubleValue());
+    }
 
-        if (getBrightness().doubleValue() > 0){
-            color = blendColors(color, Color.WHITE, getBrightness().doubleValue()*1);
-        } else if (getBrightness().doubleValue() < 0){
-            color = blendColors(color, Color.BLACK, getBrightness().doubleValue()*-1);
-        }
-
-        if (getSaturation().doubleValue() > 0){
-            color = blendColors(color, Color.YELLOW, getSaturation().doubleValue()*1);
-        } else if (getSaturation().doubleValue() < 0){
-            color = blendColors(color, Color.DARK_GRAY, getSaturation().doubleValue()*-1);
-        }
-
-        return color;
+    @Override
+    public Color getTileColor(){
+        return team.getColor();
     }
 
     @Override

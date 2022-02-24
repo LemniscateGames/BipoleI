@@ -1,5 +1,7 @@
 package lib;
 
+import lib.shop.ShopItem;
+
 import java.awt.*;
 
 import static lib.display.ColorUtils.blendColors;
@@ -28,12 +30,43 @@ public class Team {
         points += amount;
     }
     public boolean subtractPoints(int amount){
-        if (amount >= points){
+        if (amount <= points){
             points -= amount;
             return true;
         } else {
             return false;
         }
+    }
+
+    public Color getColor(double brightness, double saturation){
+        Color newColor = new Color(color.getRed(), color.getGreen(), color.getBlue());
+
+        if (brightness > 0){
+            newColor = blendColors(newColor, Color.WHITE, brightness);
+        } else if (brightness < 0){
+            newColor = blendColors(newColor, Color.BLACK, -brightness);
+        }
+
+        if (saturation > 0){
+            newColor = blendColors(newColor, Color.YELLOW, saturation);
+        } else if (saturation < 0){
+            newColor = blendColors(newColor, Color.DARK_GRAY, -saturation);
+        }
+
+        return newColor;
+    }
+
+    // Information
+    public boolean canAfford(int points){
+        return points <= this.points;
+    }
+
+    public boolean canAfford(ShopItem item){
+        return item.getCost() <= points;
+    }
+
+    public boolean canBuy(ShopItem item){
+        return canAfford(item);
     }
 
     // Accessors

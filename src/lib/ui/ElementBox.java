@@ -11,9 +11,9 @@ public class ElementBox {
     public static final Color UI_FG_COLOR = new Color(240, 240, 240);
     public static final Color UI_BG_COLOR = new Color(8,8,8, 200);
     public static final Color UI_BORDER_COLOR = new Color(80, 80, 80);
-    public static final Font GAME_FONT_SMALL = new Font("monospace", Font.PLAIN, 12);
+    public static final Font GAME_FONT_SMALL = new Font("monospace", Font.PLAIN, 13);
     public static final Font GAME_FONT = new Font("monospace", Font.PLAIN, 18);
-    public static final Font GAME_FONT_BIG = new Font("monospace", Font.PLAIN, 24);
+    public static final Font GAME_FONT_BIG = new Font("monospace", Font.PLAIN, 23);
     public enum Alignment {
         NONE, START, CENTER, END
     }
@@ -58,7 +58,14 @@ public class ElementBox {
         setPanel(panel);
     }
 
+    /** Anything that has to be initialized on this ElementBox before the super draw call is made should be overridden in this method. **/
+    public void beforeDraw(){
+
+    }
+
     public void draw(Graphics g){
+        beforeDraw();
+
         if (!isTransparentBg){
             g.setColor(bg);
             g.fillRect(xPos(), yPos(), getWidth(), getHeight());

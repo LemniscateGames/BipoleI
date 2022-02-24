@@ -1,5 +1,9 @@
 package lib;
 
+import lib.panels.BattlePanel;
+import lib.ui.ElementBox;
+import lib.units.EmptyLand;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -21,7 +25,7 @@ public class ContestedTile implements Tile {
 
     public ContestedTile(Team team) {
         this.team = team;
-        this.pointValue = 0;
+        this.pointValue = 1;
 
         ActionListener onCaptureAction = evt -> onCapture();
         contestProgressTimer = new Timer(CAPTURE_TIME, onCaptureAction);
@@ -39,7 +43,8 @@ public class ContestedTile implements Tile {
 
     /** Runs when the contest delay expires and this tile is captured. **/
     public void onCapture(){
-
+        contestProgressTimer.stop();
+        map.placeTile(new EmptyLand(team), row, col);
     }
 
     /** Have another team contest for this tile, paying the current point value + 1. **/
@@ -55,6 +60,39 @@ public class ContestedTile implements Tile {
 
         this.team = team;
         this.pointValue += 1;
+        contestProgressTimer.restart();
+    }
+
+    @Override
+    public void drawBelowGrid(Graphics g, double x, double y, double z) {
+        Color lineColor = team.getColor(0, -0.5);
+        int SHIFT_SPEED = 1000;
+        double hz = z/2;
+        double az = (z/10);
+        if (az < 1) az = 1;
+        long cycle = System.currentTimeMillis()%SHIFT_SPEED;
+        int yshift = (int)((double)cycle/SHIFT_SPEED*az);
+
+        g.setColor(lineColor);
+        for (double yl = (y + yshift); yl < y + z; yl += az){
+            if ((yl-y) < hz){
+                g.drawLine((int)(x - (yl-y)*2), (int)yl, (int)(x + (yl-y)*2), (int)yl);
+            } else {
+                g.drawLine((int)(x - 2*z + (yl-y)*2), (int)yl, (int)(x + 2*z - (yl-y)*2), (int)yl);
+            }
+        }
+    }
+
+    @Override
+    public void drawUI(Graphics g, double x, double y, double z) {
+        BattlePanel.drawBar(g, x, y, z,
+                (double)(System.currentTimeMillis()-contestStartTime)/CAPTURE_TIME, team.getColor());
+
+        BattlePanel.drawCenteredString(g,
+                new Rectangle((int)(x-z), (int)y, (int)(z*2), (int)z),
+                pointValue+"",
+                ElementBox.GAME_FONT,
+                team.getColor(0.2, 0.0));
     }
 
     @Override
@@ -68,17 +106,22 @@ public class ContestedTile implements Tile {
     }
 
     @Override
-    public void drawUI(Graphics g, double x, double y, double z) {
-
-    }
-
-    @Override
     public void onHover() {
 
     }
 
     @Override
     public void onUnhover() {
+
+    }
+
+    @Override
+    public void onMouseHover() {
+
+    }
+
+    @Override
+    public void onMouseUnhover() {
 
     }
 
