@@ -5,6 +5,8 @@ import lib.display.AnimatedValue;
 import lib.misc.RowColPoint;
 import lib.shop.Shop;
 import lib.ui.ElementBox;
+import lib.ui.ShopItemElementBox;
+import lib.units.EmptyLand;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputListener;
@@ -42,16 +44,23 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     private Number zoom = 80.0;
 
     // Cursor
-    private int cursorRow = 0;
-    private int cursorCol = 0;
-    private Number cursorCameraRow = 0;
-    private Number cursorCameraCol = 0;
+    private int mapCursorRow = 0;
+    private int mapCursorCol = 0;
+    private int shopCursorRow = 0;
+    private int shopCursorCol = 0;
+    private Number mapCursorDisplayRow = 0;
+    private Number mapCursorDisplayCol = 0;
     private int mouseRow = 0;
     private int mouseCol = 0;
+    private int mouseShopItem = 0;
 
     // Controls
     private Point clickPoint;
     private double clickCameraRowPos, clickCameraColPos;
+    public enum ControlMode {
+        MAP_CURSOR, SHOP_CURSOR
+    }
+    private ControlMode mode;
 
     // UI Elements
     private final ElementBox pointCounter;
@@ -73,7 +82,6 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         screenRefreshTimer.setCoalesce(false);
         screenRefreshTimer.start();
 
-
         // point counter
         pointCounter = new ElementBox(0, 0, 120, 40);
         pointCounter.setAlignPanelX(true);
@@ -82,8 +90,11 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
 
         // Initialize shop
         shop = Shop.generateDefaultShop(this, team);
+        shop.selectItem(0);
 
         // ---- Controls
+        mode = ControlMode.MAP_CURSOR;
+
         // mouse
         super.addMouseListener(this);
         super.addMouseMotionListener(this);
@@ -186,9 +197,9 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
 
         // Draw cursor
         drawInsetTile(g,
-                getScreenX(cursorCameraRow.doubleValue(), cursorCameraCol.doubleValue()),
-                getScreenY(cursorCameraRow.doubleValue(), cursorCameraCol.doubleValue()),
-                zoom.doubleValue(), 0.1, team.getPointColor()
+                getScreenX(mapCursorDisplayRow.doubleValue(), mapCursorDisplayCol.doubleValue()),
+                getScreenY(mapCursorDisplayRow.doubleValue(), mapCursorDisplayCol.doubleValue()),
+                zoom.doubleValue(), 0.1, mode == ControlMode.MAP_CURSOR ? team.getPointColor() : team.getFadedPointColor()
         );
 
         // ==== Draw all tile features
@@ -336,10 +347,10 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
 
     // Game data
     public Tile cursorTile(){
-        return battle.getMap().getTile(cursorRow, cursorCol);
+        return battle.getMap().getTile(mapCursorRow, mapCursorCol);
     }
     public Unit cursorUnit(){
-        Tile tile = battle.getMap().getTile(cursorRow, cursorCol);
+        Tile tile = battle.getMap().getTile(mapCursorRow, mapCursorCol);
         if (tile instanceof Unit){
             return (Unit) tile;
         }
@@ -351,9 +362,18 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     // mouse
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (e.getButton() == 1){
-            RowColPoint clickGridPos = getGridPos(e.getX(), e.getY());
-            setCursor(clickGridPos.row, clickGridPos.col);
+        // Shop click
+        if (e.getX() > getWidth()-Shop.SHOP_WIDTH){
+//            changeModeTo(ControlMode.SHOP_CURSOR);
+        }
+
+        // Map click
+        else {
+            changeModeTo(ControlMode.MAP_CURSOR);
+            if (e.getButton() == 1){
+                RowColPoint clickGridPos = getGridPos(e.getX(), e.getY());
+                setCursor(clickGridPos.row, clickGridPos.col);
+            }
         }
     }
 
@@ -389,17 +409,48 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        RowColPoint mouseGridPos = getGridPos(e.getX(), e.getY());
-        
-        if (mouseRow != mouseGridPos.row || mouseCol != mouseGridPos.col){
+        // Shop
+        if (e.getX() >= getWidth()-Shop.SHOP_WIDTH) {
             Tile unhoverTile = battle.getMap().getTile(mouseRow, mouseCol);
             if (unhoverTile != null) unhoverTile.onMouseUnhover();
+            mouseRow = -1; mouseCol = -1;
 
-            Tile hoverTile = battle.getMap().getTile(mouseGridPos.row, mouseGridPos.col);
-            if (hoverTile != null) hoverTile.onMouseHover();
+            int newMouseShopItem = -1;
+            for (int i=0; i<shop.getItemElements().length; i++){
+                ShopItemElementBox element = shop.getItemElements()[i];
+                if(
+                        element.getX() <= e.getX()
+                                && element.getX()+element.getWidth() >= e.getX()
+                                && element.getY() <= e.getY()
+                                && element.getY()+element.getHeight() >= e.getY()
+                ){
+                    newMouseShopItem = i;
+                    break;
+                }
+            }
+            if (newMouseShopItem != -1 && newMouseShopItem != mouseShopItem){
+                shop.unselectItem(mouseShopItem);
+                mouseShopItem = newMouseShopItem;
+                shopCursorRow = newMouseShopItem / Shop.COLS;
+                shopCursorCol = newMouseShopItem % Shop.COLS;
+                shop.selectItem(mouseShopItem);
+            }
+        }
 
-            mouseRow = mouseGridPos.row;
-            mouseCol = mouseGridPos.col;
+        // Map
+        else {
+            RowColPoint mouseGridPos = getGridPos(e.getX(), e.getY());
+
+            if (mouseRow != mouseGridPos.row || mouseCol != mouseGridPos.col){
+                Tile unhoverTile = battle.getMap().getTile(mouseRow, mouseCol);
+                if (unhoverTile != null) unhoverTile.onMouseUnhover();
+
+                Tile hoverTile = battle.getMap().getTile(mouseGridPos.row, mouseGridPos.col);
+                if (hoverTile != null) hoverTile.onMouseHover();
+
+                mouseRow = mouseGridPos.row;
+                mouseCol = mouseGridPos.col;
+            }
         }
     }
 
@@ -421,7 +472,7 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     public class InteractAction extends AbstractAction{
         @Override
         public void actionPerformed(ActionEvent e) {
-            interactWithTile(cursorRow, cursorCol);
+            interact();
         }
     }
 
@@ -450,29 +501,53 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         }
     }
 
+    public void changeModeTo(ControlMode newMode){
+        if (mode == newMode) return;
+
+        if (mode == ControlMode.SHOP_CURSOR) shop.unfocusElement();
+
+        mode = newMode;
+
+        if (mode == ControlMode.SHOP_CURSOR) shop.focusElement();
+    }
+
     // ==== USER INTERACTION METHODS (called via controls)
     public void moveCursor(int row, int col){
-        Map map = battle.getMap();
-        if (cursorRow+row >= 0 && cursorRow+row < map.numRows()
-                && cursorCol+col >= 0 && cursorCol+col < map.numCols()){
-            Tile tile = map.getTile(cursorRow, cursorCol);
-            if (tile != null) tile.onUnhover();
+        // Map cursor mode - move cursor in map
+        if (mode == ControlMode.MAP_CURSOR){
+            Map map = battle.getMap();
+            if (mapCursorRow +row >= 0 && mapCursorRow +row < map.numRows()
+                    && mapCursorCol +col >= 0 && mapCursorCol +col < map.numCols()){
+                Tile tile = map.getTile(mapCursorRow, mapCursorCol);
+                if (tile != null) tile.onUnhover();
 
-            cursorRow += row;
-            cursorCol += col;
+                mapCursorRow += row;
+                mapCursorCol += col;
 
-            if (EASE_CURSOR){
-                cursorCameraRow = new AnimatedValue(CURSOR_SPEED, cursorCameraRow.doubleValue(), cursorRow);
-                cursorCameraCol = new AnimatedValue(CURSOR_SPEED, cursorCameraCol.doubleValue(), cursorCol);
-            } else {
-                cursorCameraRow = cursorCameraRow.doubleValue() + row;
-                cursorCameraCol = cursorCameraCol.doubleValue() + col;
+                if (EASE_CURSOR){
+                    mapCursorDisplayRow = new AnimatedValue(CURSOR_SPEED, mapCursorDisplayRow.doubleValue(), mapCursorRow);
+                    mapCursorDisplayCol = new AnimatedValue(CURSOR_SPEED, mapCursorDisplayCol.doubleValue(), mapCursorCol);
+                } else {
+                    mapCursorDisplayRow = mapCursorDisplayRow.doubleValue() + row;
+                    mapCursorDisplayCol = mapCursorDisplayCol.doubleValue() + col;
+                }
+
+                Tile newTile = map.getTile(mapCursorRow, mapCursorCol);
+                if (newTile != null) newTile.onHover();
+
+                moveCameraToCursor();
             }
+        }
 
-            Tile newTile = map.getTile(cursorRow, cursorCol);
-            if (newTile != null) newTile.onHover();
-
-            moveCameraToCursor();
+        else if (mode == ControlMode.SHOP_CURSOR){
+            if (shopCursorRow + row >= 0 && shopCursorRow + row < Shop.ROWS
+                    && shopCursorCol + col >= 0 && shopCursorCol + col < Shop.COLS) {
+                shop.unselectItem(shopCursorRow*Shop.COLS + shopCursorCol);
+                shopCursorRow += row;
+                shopCursorCol += col;
+                mouseShopItem = shopCursorRow*Shop.COLS + shopCursorCol;
+                shop.selectItem(shopCursorRow*Shop.COLS + shopCursorCol);
+            }
         }
     }
 
@@ -480,24 +555,35 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         Map map = battle.getMap();
         if (row >= 0 && row < map.numRows()
                 && col >= 0 && col < map.numCols()){
-            Tile tile = map.getTile(cursorRow, cursorCol);
+            Tile tile = map.getTile(mapCursorRow, mapCursorCol);
             if (tile != null) tile.onUnhover();
 
-            cursorRow = row;
-            cursorCol = col;
+            mapCursorRow = row;
+            mapCursorCol = col;
 
             if (EASE_CURSOR){
-                cursorCameraRow = new AnimatedValue(CURSOR_SPEED, cursorCameraRow.doubleValue(), cursorRow);
-                cursorCameraCol = new AnimatedValue(CURSOR_SPEED, cursorCameraCol.doubleValue(), cursorCol);
+                mapCursorDisplayRow = new AnimatedValue(CURSOR_SPEED, mapCursorDisplayRow.doubleValue(), mapCursorRow);
+                mapCursorDisplayCol = new AnimatedValue(CURSOR_SPEED, mapCursorDisplayCol.doubleValue(), mapCursorCol);
             } else {
-                cursorCameraRow = row;
-                cursorCameraCol = col;
+                mapCursorDisplayRow = row;
+                mapCursorDisplayCol = col;
             }
 
-            Tile newTile = map.getTile(cursorRow, cursorCol);
+            Tile newTile = map.getTile(mapCursorRow, mapCursorCol);
             if (newTile != null) newTile.onHover();
 
             moveCameraToCursor();
+        }
+
+        else if (mode == ControlMode.SHOP_CURSOR){
+            if (row >= 0 && row < Shop.ROWS
+                    && col >= 0 && col < Shop.COLS) {
+                shop.unselectItem(shopCursorRow*Shop.COLS + shopCursorCol);
+                shopCursorRow = row;
+                shopCursorCol = col;
+                mouseShopItem = shopCursorRow*Shop.COLS + shopCursorCol;
+                shop.selectItem(shopCursorRow*Shop.COLS + shopCursorCol);
+            }
         }
     }
 
@@ -507,8 +593,8 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         if (CAMERA_FOLLOW_CURSOR) {
             int cameraX = getScreenIntX(cameraRowPos.doubleValue(), cameraColPos.doubleValue());
             int cameraY = getScreenIntY(cameraRowPos.doubleValue(), cameraColPos.doubleValue());
-            int x = getScreenIntX(cursorRow+0.5, cursorCol+0.5);
-            int y = getScreenIntY(cursorRow+0.5, cursorCol+0.5);
+            int x = getScreenIntX(mapCursorRow +0.5, mapCursorCol +0.5);
+            int y = getScreenIntY(mapCursorRow +0.5, mapCursorCol +0.5);
             int followXScreen = (int)(zoom.doubleValue()*FOLLOW_X_MARGIN);
             int followYSCreen = (int)(zoom.doubleValue()*FOLLOW_Y_MARGIN);
 
@@ -542,10 +628,20 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         }
     }
 
+    // Called when Z is pressed.
+    public void interact(){
+        if (mode == ControlMode.MAP_CURSOR){
+            interactWithTile(mapCursorRow, mapCursorCol);
+        }
+        else if (mode == ControlMode.SHOP_CURSOR){
+            changeModeTo(ControlMode.MAP_CURSOR);
+        }
+    }
+
     public void interactWithTile(int row, int col){
         Tile selectedTile = cursorTile();
 
-        // If an emtpy tile is interacted with, start contesting it if there is an adjacent tile and it can be afforded
+        // If an empty tile is interacted with, start contesting it if there is an adjacent tile and it can be afforded
         if (selectedTile == null
                 && battle.getMap().hasAdjacentOwnedTile(team, row, col)
                 && team.subtractPoints(1)){
@@ -556,6 +652,17 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         else if (selectedTile instanceof ContestedTile){
             ContestedTile contestedTile = (ContestedTile) selectedTile;
             contestedTile.contest(team);
+        }
+        // If this is a claimed tile
+        else if (selectedTile instanceof ClaimedTile){
+            // If owned by player
+            if (((ClaimedTile) selectedTile).getTeam() == team){
+                // If this is empty land, open up the shop to build something
+                if (selectedTile instanceof EmptyLand){
+                    changeModeTo(ControlMode.SHOP_CURSOR);
+                }
+            }
+
         }
 
     }
@@ -571,6 +678,10 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         g.drawString(text, x, y);
     }
 
+    // ======== Accessors
+    public ControlMode getMode() {
+        return mode;
+    }
 }
 
 //            cameraRowPos = new AnimatedValue(CAMERA_SPEED, cameraRowPos.doubleValue(), cursorRow);

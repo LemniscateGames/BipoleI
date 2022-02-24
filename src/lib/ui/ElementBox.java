@@ -2,7 +2,6 @@ package lib.ui;
 
 import lib.panels.ElementPanel;
 
-import javax.swing.*;
 import java.awt.*;
 
 /** A fixed position rectangle on the screen that can have centered text. **/
@@ -10,7 +9,9 @@ public class ElementBox {
     // Constants
     public static final Color UI_FG_COLOR = new Color(240, 240, 240);
     public static final Color UI_BG_COLOR = new Color(8,8,8, 200);
+    public static final Color UI_BG_COLOR_TRANSPARENT = new Color(8,8,8, 128);
     public static final Color UI_BORDER_COLOR = new Color(80, 80, 80);
+    public static final Color UI_BORDER_COLOR_TRANSPARENT = new Color(80, 80, 80, 160);
     public static final Font GAME_FONT_SMALL = new Font("monospace", Font.PLAIN, 13);
     public static final Font GAME_FONT = new Font("monospace", Font.PLAIN, 18);
     public static final Font GAME_FONT_BIG = new Font("monospace", Font.PLAIN, 23);
@@ -68,16 +69,16 @@ public class ElementBox {
 
         if (!isTransparentBg){
             g.setColor(bg);
-            g.fillRect(xPos(), yPos(), getWidth(), getHeight());
+            g.fillRect(getX(), getY(), getWidth(), getHeight());
 
             g.setColor(border);
-            g.drawRect(xPos(), yPos(), getWidth(), getHeight());
+            g.drawRect(getX(), getY(), getWidth(), getHeight());
         }
 
         if (text != null){
             FontMetrics metrics = g.getFontMetrics(font);
-            int strX = xPos() + (width - metrics.stringWidth(text)) / 2;
-            int strY = yPos() + ((height - metrics.getHeight()) / 2) + metrics.getAscent();
+            int strX = getX() + (width - metrics.stringWidth(text)) / 2;
+            int strY = getY() + ((height - metrics.getHeight()) / 2) + metrics.getAscent();
 
             g.setColor(fg);
             g.setFont(font);
@@ -86,10 +87,10 @@ public class ElementBox {
     }
 
     // Positioning
-    public int xPos(){
+    public int getX(){
         return alignedPosition(xAlign, x, getLeft(), getRight(), getWidth());
     }
-    public int yPos(){
+    public int getY(){
         return alignedPosition(yAlign, y, getTop(), getBottom(), getHeight());
     }
     private int alignedPosition(Alignment alignment, int pos, int start, int end, int size) {
@@ -109,22 +110,22 @@ public class ElementBox {
     public int getLeft() {
         return (relLeftElement==null)
                 ? (alignPanelX ? 0 : left)
-                : relLeftElement.xPos() + left;
+                : relLeftElement.getX() + left;
     }
     public int getRight() {
         return (relRightElement==null)
                 ? (alignPanelX ? panel.getWidth() : right)
-                : relRightElement.xPos() + relRightElement.getWidth() - right;
+                : relRightElement.getX() + relRightElement.getWidth() - right;
     }
     public int getTop() {
         return (relTopElement==null)
                 ? (alignPanelY ? 0 : top)
-                : relTopElement.yPos() + top;
+                : relTopElement.getY() + top;
     }
     public int getBottom() {
         return (relBottomElement==null)
                 ? (alignPanelY ? panel.getHeight() : bottom)
-                : relBottomElement.yPos() + relBottomElement.getHeight() - bottom;
+                : relBottomElement.getY() + relBottomElement.getHeight() - bottom;
     }
 
     public int getWidth(){
@@ -147,7 +148,7 @@ public class ElementBox {
     }
 
     // Accessors
-    public JPanel getPanel() {
+    public ElementPanel getPanel() {
         return panel;
     }
     public void setPanel(ElementPanel panel) {

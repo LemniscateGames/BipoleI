@@ -1,6 +1,7 @@
 package lib;
 
 import lib.shop.ShopItem;
+import lib.ui.ElementBox;
 
 import java.awt.*;
 
@@ -12,7 +13,7 @@ public class Team {
     private Color color, unitColor, pointColor;
 
     // Colors generated during initialization that are related to core colors
-    private Color tileFillColor;
+    private Color tileFillColor, fadedPointColor, darkPointColor, darkFadedPointColor;
 
     /** The amount of points this team has. **/
     private int points;
@@ -22,7 +23,10 @@ public class Team {
         this.unitColor = unitColor;
         this.pointColor = pointColor;
 
-        this.tileFillColor = makeTransparent(color, 0.3);
+        tileFillColor = makeTransparent(color, 0.3);
+        fadedPointColor = blendColors(pointColor, Color.GRAY, 0.5);
+        darkPointColor = blendColors(pointColor, ElementBox.UI_BORDER_COLOR, 0.25);
+        darkFadedPointColor = blendColors(fadedPointColor, ElementBox.UI_BORDER_COLOR, 0.5);
     }
 
     // Interaction
@@ -92,6 +96,18 @@ public class Team {
 
     public Color getTileFillColor() {
         return tileFillColor;
+    }
+
+    public Color getFadedPointColor() {
+        return fadedPointColor;
+    }
+
+    public Color getDarkPointColor() {
+        return darkPointColor;
+    }
+
+    public Color getDarkFadedPointColor() {
+        return darkFadedPointColor;
     }
 
     public int getPoints() {

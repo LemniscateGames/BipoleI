@@ -22,14 +22,17 @@ public class Shop {
     public static final int SHOP_ITEM_WIDTH = (SHOP_INNER_WIDTH /COLS) - SHOP_ITEM_MARGIN*2;
     public static final int SHOP_ITEM_TEXT_SPACE = 12;
     public static final int SHOP_ITEM_HEIGHT = SHOP_ITEM_WIDTH + SHOP_ITEM_TEXT_SPACE;
+    public static final int ROWS = 6;
 
     // === fields
     private final Team team;
     private final ArrayList<ShopItem> items;
+    private boolean focused;
 
     // elements
     private ElementBox shopBodyElement;
-    private ArrayList<ElementBox> itemElements;
+    private ShopItemElementBox[] itemElements;
+    private int selectedItemIndex;
 
     public Shop(Team team){
         this.team = team;
@@ -51,6 +54,7 @@ public class Shop {
         shopBodyElement.setxAlign(ElementBox.Alignment.END);
         shopBodyElement.setAlignPanelX(true);
         shopBodyElement.setFillPanelY(true);
+        shopBodyElement.setBg(ElementBox.UI_BG_COLOR_TRANSPARENT);
 
         // Add each item as a new elementbox
         initializeShopItemElements(panel);
@@ -61,14 +65,14 @@ public class Shop {
       */
     public void initializeShopItemElements(BattlePanel panel){
         // Clear all existing items if any and make new arrayList
-        itemElements = new ArrayList<>();
-        for (int i=0; i<items.size(); i++){
+        itemElements = new ShopItemElementBox[ROWS*COLS];
+        for (int i=0; i<itemElements.length; i++){
             int row = i/COLS;
             int col = i%COLS;
 
-            ShopItem item = items.get(i);
-            ElementBox itemElement = new ShopItemElementBox(this, item, shopBodyElement);
-            itemElements.add(itemElement);
+            ShopItem item = i<items.size() ? items.get(i) : null;
+            ShopItemElementBox itemElement = new ShopItemElementBox(this, item, shopBodyElement);
+            itemElements[i] = itemElement;
             panel.addElement(itemElement);
 
             itemElement.setDimensions(SHOP_ITEM_WIDTH, SHOP_ITEM_HEIGHT);
@@ -82,9 +86,50 @@ public class Shop {
         }
     }
 
+    /** Ran when mode becomes SHOP_CURSOR. **/
+    public void focusElement(){
+        focused = true;
+        shopBodyElement.setBg(ElementBox.UI_BG_COLOR);
+        shopBodyElement.setBorder(ElementBox.UI_BORDER_COLOR);
+        for (ShopItemElementBox shopItem : itemElements){
+            shopItem.setBg(ElementBox.UI_BG_COLOR);
+        }
+    }
+
+    /** Ran when mode is about to not be SHOP_CURSOR. **/
+    public void unfocusElement(){
+        focused = false;
+        shopBodyElement.setBg(ElementBox.UI_BG_COLOR_TRANSPARENT);
+        shopBodyElement.setBorder(ElementBox.UI_BORDER_COLOR_TRANSPARENT);
+        for (ShopItemElementBox shopItem : itemElements){
+            shopItem.setBg(ElementBox.UI_BG_COLOR_TRANSPARENT);
+        }
+    }
+
+    public void unselectItem(int index){
+        itemElements[index].unselect();
+    }
+
+    public void selectItem(int index){
+        selectedItemIndex = index;
+        itemElements[selectedItemIndex].select();
+    }
+
     // Accessors
     public Team getTeam() {
         return team;
+    }
+
+    public ArrayList<ShopItem> getItems() {
+        return items;
+    }
+
+    public boolean isFocused() {
+        return focused;
+    }
+
+    public ShopItemElementBox[] getItemElements() {
+        return itemElements;
     }
 
     // Utility

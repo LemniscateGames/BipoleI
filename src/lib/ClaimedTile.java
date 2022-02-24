@@ -10,7 +10,7 @@ import java.awt.*;
 import static lib.display.ColorUtils.blendColors;
 
 public abstract class ClaimedTile extends GeometryTile {
-    public static final int MOUSE_HOVER_SPEED = 100;
+    public static final int MOUSE_HOVER_SPEED = 75;
     public static final double CURSOR_HOVER_GRID_BRIGHTNESS = 0.25;
     public static final double CURSOR_HOVER_GRID_SATURATION = 0.125;
     public static final double MOUSE_HOVER_GRID_BRIGHTNESS = 0.15;
