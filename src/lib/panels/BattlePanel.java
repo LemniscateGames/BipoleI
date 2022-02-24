@@ -6,6 +6,7 @@ import lib.Team;
 import lib.Tile;
 import lib.display.AnimatedValue;
 import lib.misc.RowColPoint;
+import lib.shop.Shop;
 import lib.ui.ElementBox;
 
 import javax.swing.*;
@@ -15,9 +16,8 @@ import java.awt.event.*;
 import java.util.ArrayList;
 
 import static lib.ui.ElementBox.Alignment.CENTER;
-import static lib.ui.ElementBox.Alignment.NONE;
 
-public class BattlePanel extends JPanel implements MouseInputListener, MouseMotionListener, MouseWheelListener {
+public class BattlePanel extends ElementPanel implements MouseInputListener, MouseMotionListener, MouseWheelListener {
     // ==== CONSTANTS
     // Cursor
     public static final boolean EASE_CURSOR = true;
@@ -55,17 +55,13 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
     private Point clickPoint;
     private double clickCameraRowPos, clickCameraColPos;
 
-    // Timers
-    private final Timer screenRefreshTimer;
-
     // UI Elements
-    /** All elements that should be drawn when this component is painted. **/
-    private final ArrayList<ElementBox> drawElements;
     private final ElementBox pointCounter;
 
     // Other Variables
-    private Battle battle;
-    private Team team;
+    private final Battle battle;
+    private final Team team;
+    private final Shop shop;
 
     // ==== CONSTRUCTORS
     public BattlePanel(Battle battle) {
@@ -73,40 +69,44 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
         this.team = battle.getTeam(0);
 
         // ---- Initialize screen refresh timer
-        ActionListener updateScreen = evt -> repaint();
-        screenRefreshTimer = new Timer(20, updateScreen);
+        ActionListener updateScreen = evt -> super.repaint();
+        // Timers
+        Timer screenRefreshTimer = new Timer(20, updateScreen);
+        screenRefreshTimer.setCoalesce(false);
         screenRefreshTimer.start();
 
-        // ---- Create UI elements
-        drawElements = new ArrayList<>();
+
         // point counter
         pointCounter = new ElementBox(0, 0, 120, 40);
-        pointCounter.setFillPanelX(true);
+        pointCounter.setAlignPanelX(true);
         pointCounter.setxAlign(CENTER);
-        addElement(pointCounter);
+        super.addElement(pointCounter);
+
+        // Initialize shop
+        shop = Shop.generateDefaultShop(this, team);
 
         // ---- Controls
         // mouse
-        addMouseListener(this);
-        addMouseMotionListener(this);
-        addMouseWheelListener(this);
+        super.addMouseListener(this);
+        super.addMouseMotionListener(this);
+        super.addMouseWheelListener(this);
 
         // keyboard
-        getInputMap().put(KeyStroke.getKeyStroke("UP"), "up");
-        getInputMap().put(KeyStroke.getKeyStroke("W"), "up");
-        getActionMap().put("up", new CursorUp());
-        getInputMap().put(KeyStroke.getKeyStroke("DOWN"), "down");
-        getInputMap().put(KeyStroke.getKeyStroke("S"), "down");
-        getActionMap().put("down", new CursorDown());
-        getInputMap().put(KeyStroke.getKeyStroke("LEFT"), "left");
-        getInputMap().put(KeyStroke.getKeyStroke("A"), "left");
-        getActionMap().put("left", new CursorLeft());
-        getInputMap().put(KeyStroke.getKeyStroke("RIGHT"), "right");
-        getInputMap().put(KeyStroke.getKeyStroke("D"), "right");
-        getActionMap().put("right", new CursorRight());
+        super.getInputMap().put(KeyStroke.getKeyStroke("UP"), "up");
+        super.getInputMap().put(KeyStroke.getKeyStroke("W"), "up");
+        super.getActionMap().put("up", new CursorUp());
+        super.getInputMap().put(KeyStroke.getKeyStroke("DOWN"), "down");
+        super.getInputMap().put(KeyStroke.getKeyStroke("S"), "down");
+        super.getActionMap().put("down", new CursorDown());
+        super.getInputMap().put(KeyStroke.getKeyStroke("LEFT"), "left");
+        super.getInputMap().put(KeyStroke.getKeyStroke("A"), "left");
+        super.getActionMap().put("left", new CursorLeft());
+        super.getInputMap().put(KeyStroke.getKeyStroke("RIGHT"), "right");
+        super.getInputMap().put(KeyStroke.getKeyStroke("D"), "right");
+        super.getActionMap().put("right", new CursorRight());
 
         // ---- other
-        setBackground(new Color(16,16,16));
+        super.setBackground(new Color(16,16,16));
     }
 
     // ==== MAIN DRAW
@@ -119,14 +119,9 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
 
         // Update the point counter's text.
         pointCounter.setText(team.getPoints()+" pts");
-
-        // Draw all elements
-        for (ElementBox element : drawElements){
-            element.draw(g);
-        }
     }
 
-    /** Draw the whole map and all its tiles, big ol function so im seperating it. **/
+    /** Draw the whole map and all its tiles, big ol function so im separating it. **/
     public void drawMap(Graphics g){
         Map map = battle.getMap();
         int numRows = map.numRows();
@@ -204,6 +199,9 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
                 }
             }
         }
+
+        // Draw UI elementBoxes
+        drawElements(g);
     }
 
     // ==== FEATURES (static)
@@ -254,12 +252,8 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
         drawInsetTile(g, x, y, z, inset, color, null);
     }
 
-    // ==== USER INTERFACE
-    public void addElement(ElementBox element){
-        drawElements.add(element);
-        element.setPanel(this);
-    }
 
+    // =========== USER INTERFACE
     public static void drawBar(Graphics g, double x, double y, double z, double percent, Color fillColor){
         y += (int)(z*0.75);
 
@@ -284,13 +278,13 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
     public double getScreenX(double rowPos, double colPos){
         double relRow = rowPos - cameraRowPos.doubleValue();
         double relCol = colPos - cameraColPos.doubleValue();
-        return (relRow*ROW_X_OFFSET + relCol*COL_X_OFFSET)*zoom.doubleValue() + getWidth()/2.0;
+        return (relRow*ROW_X_OFFSET + relCol*COL_X_OFFSET)*zoom.doubleValue() + super.getWidth()/2.0;
     }
     /** Get the screen Y position of a given row and col on the grid. **/
     public double getScreenY(double rowPos, double colPos, double height){
         double relRow = rowPos - cameraRowPos.doubleValue();
         double relCol = colPos - cameraColPos.doubleValue();
-        return (relRow*ROW_Y_OFFSET + relCol*COL_Y_OFFSET + height*HEIGHT_Y_OFFSET)*zoom.doubleValue() + getHeight()/2.0;
+        return (relRow*ROW_Y_OFFSET + relCol*COL_Y_OFFSET + height*HEIGHT_Y_OFFSET)*zoom.doubleValue() + super.getHeight()/2.0;
     }
 
     public double getScreenY(double rowPos, double colPos){
@@ -308,8 +302,8 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
 
     /** Get the grid X position of a given X and Y screen coordinate. **/
     public RowColPoint getGridPos(int x, int y){
-        double relX = (x - getWidth()/2.0) / zoom.doubleValue();
-        double relY = (y - getHeight()/2.0) / zoom.doubleValue();
+        double relX = (x - super.getWidth()/2.0) / zoom.doubleValue();
+        double relY = (y - super.getHeight()/2.0) / zoom.doubleValue();
 
         double row = (relX/ROW_X_OFFSET + relY/ROW_Y_OFFSET)/2 + cameraRowPos.doubleValue();
         double col = (relX/COL_X_OFFSET + relY/COL_Y_OFFSET)/2 + cameraColPos.doubleValue();
@@ -318,13 +312,13 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
     }
 
     public double getGridPosRow(int x, int y){
-        double relX = (x - getWidth()/2.0) / zoom.doubleValue();
-        double relY = (y - getHeight()/2.0) / zoom.doubleValue();
+        double relX = (x - super.getWidth()/2.0) / zoom.doubleValue();
+        double relY = (y - super.getHeight()/2.0) / zoom.doubleValue();
         return (relX/ROW_X_OFFSET + relY/ROW_Y_OFFSET)/2 + cameraRowPos.doubleValue();
     }
     public double getGridPosCol(int x, int y){
-        double relX = (x - getWidth()/2.0) / zoom.doubleValue();
-        double relY = (y - getHeight()/2.0) / zoom.doubleValue();
+        double relX = (x - super.getWidth()/2.0) / zoom.doubleValue();
+        double relY = (y - super.getHeight()/2.0) / zoom.doubleValue();
         return (relX/COL_X_OFFSET + relY/COL_Y_OFFSET)/2 + cameraColPos.doubleValue();
     }
 
@@ -379,7 +373,7 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
         double scale = Math.pow(ZOOM_SCROLL_FACTOR, e.getWheelRotation());
         zoom = zoom.doubleValue() * scale;
 
-        RowColPoint mouseGridPos = getGridPos(getWidth() - e.getX(), getHeight() - e.getY());
+        RowColPoint mouseGridPos = getGridPos(super.getWidth() - e.getX(), super.getHeight() - e.getY());
 
         double rowDistance = mouseGridPos.row - cameraRowPos.doubleValue();
         double colDistance = mouseGridPos.col - cameraColPos.doubleValue();
@@ -480,14 +474,14 @@ public class BattlePanel extends JPanel implements MouseInputListener, MouseMoti
 
             if (x < followXScreen){
                 cameraX += x - followXScreen; cameraMoved = true;
-            } else if (x > getWidth()-followXScreen){
-                cameraX += x - getWidth()+followXScreen; cameraMoved = true;
+            } else if (x > super.getWidth()-followXScreen){
+                cameraX += x - super.getWidth()+followXScreen; cameraMoved = true;
             }
 
             if (y < followYSCreen) {
                 cameraY += y - followYSCreen; cameraMoved = true;
-            } else if (y > getHeight()-followYSCreen) {
-                cameraY += y - getHeight()+followYSCreen; cameraMoved = true;
+            } else if (y > super.getHeight()-followYSCreen) {
+                cameraY += y - super.getHeight()+followYSCreen; cameraMoved = true;
             }
 
             if (cameraMoved) moveCameraToScreenPoint(cameraX, cameraY);

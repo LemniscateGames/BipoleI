@@ -14,7 +14,7 @@ public class Map {
     }
 
     public Tile getTile(int row, int col){
-//        if (!hasTile(row, col)) return null;
+        if (!hasTile(row, col)) return null;
         return tiles[row][col];
     }
 
@@ -28,6 +28,24 @@ public class Map {
         Tile tile = getTile(row, col);
         if (tile == null) return true;
         return !tile.hasBorder();
+    }
+
+    /** Return true if there is an adjacent owned tile to the given coordinates. **/
+    public boolean hasAdjacentOwnedTile(Team team, int row, int col){
+        return isOwnedTile(team, row+1, col)
+                || isOwnedTile(team, row-1, col)
+                || isOwnedTile(team, row, col+1)
+                || isOwnedTile(team, row, col-1);
+    }
+
+    /** Returns true if the given coordinates contains a tile owned by the passed the team. **/
+    public boolean isOwnedTile(Team team, int row, int col){
+        Tile tile = getTile(row, col);
+        if (tile instanceof ClaimedTile){
+            return ((ClaimedTile) tile).getTeam() == team;
+        } else {
+            return false;
+        }
     }
 
     public int numRows(){

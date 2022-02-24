@@ -1,0 +1,6 @@
+WASD/Arrows - move cursor
+Click - move cursor to click location
+Drag - pan map
+Scroll - zoom in/out
+
+Z - claim tile

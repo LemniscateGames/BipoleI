@@ -2,16 +2,18 @@ package lib;
 
 import lib.display.shaperendering.ShapeOrtho3D;
 import lib.panels.BattlePanel;
+import lib.shop.Buyable;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 
 /** A unit. **/
-public abstract class Unit extends ClaimedTile {
+public abstract class Unit extends ClaimedTile implements Buyable {
     // ------------ FIELDS
     // ======== Constants
     public static final Color READINESS_COLOR = new Color(240, 240, 240, 200);
+    public static final double UNREADY_SATURATION = -0.25;
 
     // ======== Stats
     /** Value in points of this unit.
@@ -61,6 +63,9 @@ public abstract class Unit extends ClaimedTile {
     public void onPlace(Map map, int r, int c) {
         super.onPlace(map, r, c);
         if (canAttack || autoAct){
+            isReady = false;
+            setSaturation(UNREADY_SATURATION);
+
             ActionListener onReadyAction = evt -> onReady();
             readyTimer = new Timer(delay, onReadyAction);
             readyTimer.setRepeats(autoAct);
@@ -77,6 +82,7 @@ public abstract class Unit extends ClaimedTile {
             startTime = System.currentTimeMillis();
         } else {
             isReady = true;
+            setSaturation(0.0);
         }
     }
 
@@ -116,6 +122,12 @@ public abstract class Unit extends ClaimedTile {
     /** Get the percentage that this unit is ready. Used in displaying. **/
     public double readinessPercent(){
         return Math.min((double)(System.currentTimeMillis() - startTime) / readyTimer.getDelay(), 1.0);
+    }
+
+    /** This unit's default cost if not specified. Needed for shop. **/
+    @Override
+    public int getCost() {
+        return value;
     }
 
     // ======== Accessors

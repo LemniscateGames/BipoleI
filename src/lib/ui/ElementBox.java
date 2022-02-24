@@ -1,6 +1,6 @@
 package lib.ui;
 
-import lib.panels.BattlePanel;
+import lib.panels.ElementPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,6 +11,7 @@ public class ElementBox {
     public static final Color UI_FG_COLOR = new Color(240, 240, 240);
     public static final Color UI_BG_COLOR = new Color(8,8,8, 200);
     public static final Color UI_BORDER_COLOR = new Color(80, 80, 80);
+    public static final Font GAME_FONT_SMALL = new Font("monospace", Font.PLAIN, 12);
     public static final Font GAME_FONT = new Font("monospace", Font.PLAIN, 18);
     public static final Font GAME_FONT_BIG = new Font("monospace", Font.PLAIN, 24);
     public enum Alignment {
@@ -18,7 +19,7 @@ public class ElementBox {
     }
 
     // Fields
-    private JPanel panel;
+    private ElementPanel panel;
     private int width, height;
     private String text;
     private Color fg = UI_FG_COLOR;
@@ -27,13 +28,16 @@ public class ElementBox {
     private Font font = GAME_FONT;
     private Alignment xAlign;
     private Alignment yAlign;
+    private boolean isTransparentBg;
 
     // not aligned
     private int x, y;
 
     // aligned
     private int left, right, top, bottom;
+    private boolean alignPanelX, alignPanelY;
     private boolean fillPanelX, fillPanelY;
+    private ElementBox relLeftElement, relRightElement, relTopElement, relBottomElement;
 
     public ElementBox(){
 
@@ -48,12 +52,20 @@ public class ElementBox {
         yAlign = Alignment.NONE;
     }
 
-    public void draw(Graphics g){
-        g.setColor(bg);
-        g.fillRect(xPos(), yPos(), width, height);
+    /** Initialize this element's components on things that are dependent on the ElementPanel ti is instantiated into.
+     * Should be overridden if neccesary. **/
+    public void initialize(ElementPanel panel){
+        setPanel(panel);
+    }
 
-        g.setColor(border);
-        g.drawRect(xPos(), yPos(), width, height);
+    public void draw(Graphics g){
+        if (!isTransparentBg){
+            g.setColor(bg);
+            g.fillRect(xPos(), yPos(), getWidth(), getHeight());
+
+            g.setColor(border);
+            g.drawRect(xPos(), yPos(), getWidth(), getHeight());
+        }
 
         if (text != null){
             FontMetrics metrics = g.getFontMetrics(font);
@@ -68,10 +80,10 @@ public class ElementBox {
 
     // Positioning
     public int xPos(){
-        return alignedPosition(xAlign, x, getLeft(), getRight(), width);
+        return alignedPosition(xAlign, x, getLeft(), getRight(), getWidth());
     }
     public int yPos(){
-        return alignedPosition(yAlign, y, getTop(), getBottom(), height);
+        return alignedPosition(yAlign, y, getTop(), getBottom(), getHeight());
     }
     private int alignedPosition(Alignment alignment, int pos, int start, int end, int size) {
         switch(alignment){
@@ -88,23 +100,50 @@ public class ElementBox {
     }
 
     public int getLeft() {
-        return fillPanelX ? 0 : left;
+        return (relLeftElement==null)
+                ? (alignPanelX ? 0 : left)
+                : relLeftElement.xPos() + left;
     }
     public int getRight() {
-        return fillPanelX ? panel.getWidth() : right;
+        return (relRightElement==null)
+                ? (alignPanelX ? panel.getWidth() : right)
+                : relRightElement.xPos() + relRightElement.getWidth() - right;
     }
     public int getTop() {
-        return fillPanelY ? 0 : top;
+        return (relTopElement==null)
+                ? (alignPanelY ? 0 : top)
+                : relTopElement.yPos() + top;
     }
     public int getBottom() {
-        return fillPanelY ? panel.getHeight() : bottom;
+        return (relBottomElement==null)
+                ? (alignPanelY ? panel.getHeight() : bottom)
+                : relBottomElement.yPos() + relBottomElement.getHeight() - bottom;
+    }
+
+    public int getWidth(){
+        return fillPanelX ? panel.getWidth() : width;
+    }
+    public int getHeight(){
+        return fillPanelY ? panel.getHeight() : height;
+    }
+
+    public void setDimensions(int width, int height){
+        this.width = width;
+        this.height = height;
+    }
+
+    public boolean isTransparentBg() {
+        return isTransparentBg;
+    }
+    public void setTransparentBg(boolean transparentBg) {
+        isTransparentBg = transparentBg;
     }
 
     // Accessors
     public JPanel getPanel() {
         return panel;
     }
-    public void setPanel(JPanel panel) {
+    public void setPanel(ElementPanel panel) {
         this.panel = panel;
     }
     public Color getFg() {
@@ -161,6 +200,18 @@ public class ElementBox {
     public void setBottom(int bottom) {
         this.bottom = bottom;
     }
+    public boolean isAlignPanelX() {
+        return alignPanelX;
+    }
+    public void setAlignPanelX(boolean alignPanelX) {
+        this.alignPanelX = alignPanelX;
+    }
+    public boolean isAlignPanelY() {
+        return alignPanelY;
+    }
+    public void setAlignPanelY(boolean alignPanelY) {
+        this.alignPanelY = alignPanelY;
+    }
     public boolean isFillPanelX() {
         return fillPanelX;
     }
@@ -173,4 +224,17 @@ public class ElementBox {
     public void setFillPanelY(boolean fillPanelY) {
         this.fillPanelY = fillPanelY;
     }
+    public void setRelLeftElement(ElementBox relLeftElement) {
+        this.relLeftElement = relLeftElement;
+    }
+    public void setRelRightElement(ElementBox relRightElement) {
+        this.relRightElement = relRightElement;
+    }
+    public void setRelTopElement(ElementBox relTopElement) {
+        this.relTopElement = relTopElement;
+    }
+    public void setRelBottomElement(ElementBox relBottomElement) {
+        this.relBottomElement = relBottomElement;
+    }
+
 }

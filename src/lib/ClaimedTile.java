@@ -41,11 +41,21 @@ public abstract class ClaimedTile extends GeometryTile {
 
     @Override
     public Color getColor() {
-        if (getHoverBrightness().doubleValue() == 0.0){
-            return team.getColor();
-        } else {
-            return blendColors(team.getColor(), Color.WHITE, getHoverBrightness().doubleValue()*0.25);
+        Color color = team.getColor();
+
+        if (getBrightness().doubleValue() > 0){
+            color = blendColors(color, Color.WHITE, getBrightness().doubleValue()*1);
+        } else if (getBrightness().doubleValue() < 0){
+            color = blendColors(color, Color.BLACK, getBrightness().doubleValue()*-1);
         }
+
+        if (getSaturation().doubleValue() > 0){
+            color = blendColors(color, Color.YELLOW, getSaturation().doubleValue()*1);
+        } else if (getSaturation().doubleValue() < 0){
+            color = blendColors(color, Color.DARK_GRAY, getSaturation().doubleValue()*-1);
+        }
+
+        return color;
     }
 
     @Override
