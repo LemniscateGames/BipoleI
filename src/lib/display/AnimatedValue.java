@@ -42,16 +42,21 @@ public class AnimatedValue extends Number {
 
     public double getValue(){
         if (!started) return start;
-        if (finished) return end;
+        if (finished) return timingFunction.endAtStart() ? start : end;
 
         long time = System.currentTimeMillis();
 
         if (time >= endTime){
             finished = true;
-            return end;
+            return timingFunction.endAtStart() ? start : end;
         }
 
-        return (end + (start-end)*(timingFunction.valueAtTime((double)(endTime - time)/duration)));
+        double t = (double)(endTime - time)/duration;
+        return start + (end-start)*timingFunction.valueAtTime(t);
+    }
+
+    public boolean isAnimating(){
+        return started && !finished;
     }
 
     @Override

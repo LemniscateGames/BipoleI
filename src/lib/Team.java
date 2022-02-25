@@ -24,7 +24,7 @@ public class Team {
         this.pointColor = pointColor;
 
         tileFillColor = makeTransparent(color, 0.3);
-        fadedPointColor = blendColors(pointColor, Color.GRAY, 0.5);
+        fadedPointColor = blendColors(pointColor, Color.GRAY, 0.7);
         darkPointColor = blendColors(pointColor, ElementBox.UI_BORDER_COLOR, 0.25);
         darkFadedPointColor = blendColors(fadedPointColor, ElementBox.UI_BORDER_COLOR, 0.5);
     }

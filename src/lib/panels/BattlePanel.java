@@ -4,7 +4,7 @@ import lib.*;
 import lib.display.AnimatedValue;
 import lib.misc.RowColPoint;
 import lib.shop.Shop;
-import lib.ui.ElementBox;
+import lib.ui.PointCounterElementBox;
 import lib.ui.ShopItemElementBox;
 import lib.units.EmptyLand;
 
@@ -63,7 +63,7 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     private ControlMode mode;
 
     // UI Elements
-    private final ElementBox pointCounter;
+    private final PointCounterElementBox pointCounter;
 
     // Other Variables
     private final Battle battle;
@@ -83,7 +83,7 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         screenRefreshTimer.start();
 
         // point counter
-        pointCounter = new ElementBox(0, 0, 120, 40);
+        pointCounter = new PointCounterElementBox(0, 0, 120, 40);
         pointCounter.setAlignPanelX(true);
         pointCounter.setxAlign(CENTER);
         super.addElement(pointCounter);
@@ -116,6 +116,8 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
 
         super.getInputMap().put(KeyStroke.getKeyStroke("Z"), "interact");
         super.getActionMap().put("interact", new InteractAction());
+        super.getInputMap().put(KeyStroke.getKeyStroke("X"), "cancel");
+        super.getActionMap().put("cancel", new CancelAction());
 
         // ---- other
         super.setBackground(new Color(16,16,16));
@@ -364,7 +366,7 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     public void mouseClicked(MouseEvent e) {
         // Shop click
         if (e.getX() > getWidth()-Shop.SHOP_WIDTH){
-//            changeModeTo(ControlMode.SHOP_CURSOR);
+            changeModeTo(ControlMode.SHOP_CURSOR);
         }
 
         // Map click
@@ -473,6 +475,12 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         @Override
         public void actionPerformed(ActionEvent e) {
             interact();
+        }
+    }
+    public class CancelAction extends AbstractAction{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            cancel();
         }
     }
 
@@ -634,7 +642,8 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
             interactWithTile(mapCursorRow, mapCursorCol);
         }
         else if (mode == ControlMode.SHOP_CURSOR){
-            changeModeTo(ControlMode.MAP_CURSOR);
+//            changeModeTo(ControlMode.MAP_CURSOR);
+            pointCounter.shake();
         }
     }
 
@@ -666,6 +675,14 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         }
 
     }
+
+    // Called when X is pressed.
+    public void cancel(){
+        if (mode == ControlMode.SHOP_CURSOR){
+            changeModeTo(ControlMode.MAP_CURSOR);
+        }
+    }
+
 
     // ======== Utility
     public static void drawCenteredString(Graphics g, Rectangle rect, String text, Font font, Color textColor) {
