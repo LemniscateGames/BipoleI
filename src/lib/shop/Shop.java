@@ -2,6 +2,7 @@ package lib.shop;
 
 import lib.Team;
 import lib.panels.BattlePanel;
+import lib.panels.ElementPanel;
 import lib.ui.ElementBox;
 import lib.ui.ShopItemElementBox;
 import lib.units.Castle;
@@ -48,7 +49,7 @@ public class Shop {
     }
 
     /** Should be called after all items are added. Initializes all elements to the passed panel. **/
-    public void initializeElements(BattlePanel panel){
+    public void initializeElements(ElementPanel panel){
         // Container box for the shop
         shopBodyElement = new ElementBox(0, 0, SHOP_WIDTH, 50);
         panel.addElement(shopBodyElement);
@@ -64,7 +65,7 @@ public class Shop {
     /** Re-Initialize all shop item elements and remove current ones.
      * Should be called whenever the shop items arraylist is updated.
       */
-    public void initializeShopItemElements(BattlePanel panel){
+    public void initializeShopItemElements(ElementPanel panel){
         // Clear all existing items if any and make new arrayList
         itemElements = new ShopItemElementBox[ROWS*COLS];
         for (int i=0; i<itemElements.length; i++){

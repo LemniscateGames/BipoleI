@@ -28,8 +28,10 @@ public class ElementBox {
     private Color bg = UI_BG_COLOR;
     private Color border = UI_BORDER_COLOR;
     private Font font = GAME_FONT;
-    private Alignment xAlign;
-    private Alignment yAlign;
+    private Alignment xAlign = Alignment.START;
+    private Alignment yAlign = Alignment.START;
+    private Alignment xTextAlign = Alignment.CENTER;
+    private Alignment yTextAlign = Alignment.CENTER;
     private boolean isTransparentBg;
 
     // not aligned
@@ -78,8 +80,24 @@ public class ElementBox {
 
         if (text != null){
             FontMetrics metrics = g.getFontMetrics(font);
-            int strX = getX() + (width - metrics.stringWidth(text)) / 2;
-            int strY = getY() + ((height - metrics.getHeight()) / 2) + metrics.getAscent();
+
+            int strX, strY;
+            switch(xTextAlign){
+                case CENTER:
+                    strX = getX() + (width - metrics.stringWidth(text)) / 2; break;
+                case END:
+                    strX = getX() + width - metrics.stringWidth(text); break;
+                default:
+                    strX = getX(); break;
+            }
+            switch(yTextAlign){
+                case CENTER:
+                    strY = getY() + (height - metrics.getHeight() + metrics.getAscent()) / 2; break;
+                case END:
+                    strY = getY() + height - metrics.getHeight() + metrics.getAscent(); break;
+                default:
+                    strY = getY() + metrics.getAscent(); break;
+            }
 
             g.setColor(fg);
             g.setFont(font);
@@ -196,6 +214,18 @@ public class ElementBox {
     }
     public void setyAlign(Alignment yAlign) {
         this.yAlign = yAlign;
+    }
+    public Alignment getxTextAlign() {
+        return xTextAlign;
+    }
+    public void setxTextAlign(Alignment xTextAlign) {
+        this.xTextAlign = xTextAlign;
+    }
+    public Alignment getyTextAlign() {
+        return yTextAlign;
+    }
+    public void setyTextAlign(Alignment yTextAlign) {
+        this.yTextAlign = yTextAlign;
     }
     public void setLeft(int left) {
         this.left = left;

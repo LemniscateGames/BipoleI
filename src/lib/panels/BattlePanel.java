@@ -7,8 +7,10 @@ import lib.misc.RowColPoint;
 import lib.shop.Buyable;
 import lib.shop.Shop;
 import lib.shop.ShopItem;
+import lib.ui.ElementBox;
 import lib.ui.PointCounterElementBox;
 import lib.ui.ShopItemElementBox;
+import lib.ui.UnitInfobox;
 import lib.units.EmptyLand;
 
 import javax.swing.*;
@@ -71,6 +73,7 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
 
     // UI Elements
     private final PointCounterElementBox pointCounter;
+    private final UnitInfobox unitInfobox;
 
     // Other Variables
     private final Battle battle;
@@ -88,6 +91,13 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         Timer screenRefreshTimer = new Timer(20, updateScreen);
         screenRefreshTimer.setCoalesce(false);
         screenRefreshTimer.start();
+
+        // Unit infobox
+        unitInfobox = new UnitInfobox(this);
+        unitInfobox.setxAlign(ElementBox.Alignment.START);
+        unitInfobox.setAlignPanelX(true);
+//        unitInfobox.setFillPanelY(true);
+        super.addElement(unitInfobox);
 
         // point counter
         pointCounter = new PointCounterElementBox(0, 0, 120, 40);
@@ -570,6 +580,7 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
                 if (newTile != null) newTile.onHover();
 
                 moveCameraToCursor();
+                updateUnitInfobox();
             }
         }
 
@@ -607,6 +618,7 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
             if (newTile != null) newTile.onHover();
 
             moveCameraToCursor();
+            updateUnitInfobox();
         }
 
         else if (mode == ControlMode.SHOP_CURSOR){
@@ -723,6 +735,13 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         }
     }
 
+    // ======== UI Stuff
+    public void updateUnitInfobox(){
+        Unit selectedUnit = cursorUnit();
+        if (selectedUnit != null){
+            unitInfobox.displayUnit(selectedUnit);
+        }
+    }
 
     // ======== Utility
     public static void drawCenteredString(Graphics g, Rectangle rect, String text, Font font, Color textColor) {

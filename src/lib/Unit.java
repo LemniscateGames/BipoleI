@@ -106,7 +106,7 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     // Effects
     /** Place effect to be run when bought from the shop and placed. Looks kinda epic. **/
     public void placeEffect(BattlePanel panel){
-        placeAnimator = new AnimatedValue(TimingFunction.EASE_OUT_VERY_FAST, 1000);
+        placeAnimator = new AnimatedValue(TimingFunction.EASE_OUT_FAST, 1000);
 
         panel.addEffect(new TileShockwave(panel, getRow(), getColumn(), getTeam(),
                 placeAnimator, 0.5));
