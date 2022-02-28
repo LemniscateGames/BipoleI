@@ -1,5 +1,9 @@
 package lib;
 
+import lib.display.AnimatedValue;
+import lib.display.TimingFunction;
+import lib.display.effects.Effect;
+import lib.display.effects.TileShockwave;
 import lib.display.shaperendering.ShapeOrtho3D;
 import lib.panels.BattlePanel;
 import lib.shop.Buyable;
@@ -47,13 +51,38 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     /** If this unit is ready to act or not. Set to true when the readiness timer expires. **/
     private boolean isReady;
 
+    // ==== Effects
+    private AnimatedValue placeAnimator;
+
     // ------------ CONSTRUCTORS
-    public Unit(Team team, int value, int hp, int atk, int delay, ShapeOrtho3D... shapes) {
-        super(team, shapes);
+    public Unit(){
+        initialize();
+    }
+    public Unit(Team team) {
+        super(team);
+        initialize();
+    }
+
+    // Basically a constructor
+    public abstract Unit newUnit(Team team);
+
+    // Stat setup
+    /** Called when this Unit is constructed. Initializes necessary stats. **/
+    public abstract void initialize();
+
+    public void setValue(int value) {
         this.value = value;
+    }
+    public void setHp(int hp) {
         this.hp = hp;
-        this.maxHp = hp;
+    }
+    public void setMaxHp(int maxHp) {
+        this.maxHp = maxHp;
+    }
+    public void setAtk(int atk) {
         this.atk = atk;
+    }
+    public void setDelay(int delay) {
         this.delay = delay;
     }
 
@@ -72,6 +101,15 @@ public abstract class Unit extends ClaimedTile implements Buyable {
             startTime = System.currentTimeMillis();
             readyTimer.start();
         }
+    }
+
+    // Effects
+    /** Place effect to be run when bought from the shop and placed. Looks kinda epic. **/
+    public void placeEffect(BattlePanel panel){
+        placeAnimator = new AnimatedValue(TimingFunction.EASE_OUT_VERY_FAST, 1000);
+
+        panel.addEffect(new TileShockwave(panel, getRow(), getColumn(), getTeam(),
+                placeAnimator, 0.5));
     }
 
     // ======== Timing/Readiness

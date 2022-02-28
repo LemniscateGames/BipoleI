@@ -16,7 +16,7 @@ public class Team {
     private Color tileFillColor, fadedPointColor, darkPointColor, darkFadedPointColor;
 
     /** The amount of points this team has. **/
-    private int points;
+    private int points = 5;
 
     public Team(Color color, Color unitColor, Color pointColor) {
         this.color = color;
@@ -24,9 +24,9 @@ public class Team {
         this.pointColor = pointColor;
 
         tileFillColor = makeTransparent(color, 0.3);
-        fadedPointColor = blendColors(pointColor, Color.GRAY, 0.7);
-        darkPointColor = blendColors(pointColor, ElementBox.UI_BORDER_COLOR, 0.25);
-        darkFadedPointColor = blendColors(fadedPointColor, ElementBox.UI_BORDER_COLOR, 0.5);
+        fadedPointColor = blendColors(pointColor, Color.GRAY, 0.5);
+        darkPointColor = blendColors(pointColor, ElementBox.UI_BORDER_COLOR, 0.5);
+        darkFadedPointColor = blendColors(darkPointColor, ElementBox.UI_BORDER_COLOR_LIGHTER, 0.5);
     }
 
     // Interaction

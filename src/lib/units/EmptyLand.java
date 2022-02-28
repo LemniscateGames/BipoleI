@@ -6,7 +6,22 @@ import lib.display.shaperendering.shapes.RectangularPrism;
 
 public class EmptyLand extends Unit {
     public EmptyLand(Team team) {
-        super(team, 0, 1, 0, 0);
+        super(team);
+    }
+
+    @Override
+    public Unit newUnit(Team team) {
+        Unit unit = new EmptyLand(team);
+        unit.initialize();
+        return unit;
+    }
+
+    @Override
+    public void initialize() {
+        setValue(0);
+        setHp(1);
+        setAtk(0);
+
         setCanAttack(false);
     }
 }

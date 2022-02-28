@@ -11,7 +11,7 @@ public class Castle extends Unit {
 
     private static final double TOWER_SIZE = 0.125;
     private static final double TOWER_SPACING = TOWER_SIZE + (SIZE - TOWER_SIZE*3)/2;
-    private static final double TOWER_SPACE_BETWEEN = (SIZE - TOWER_SIZE*3)/2;
+//    private static final double TOWER_SPACE_BETWEEN = (SIZE - TOWER_SIZE*3)/2;
     private static final double TOWER_HEIGHT = 0.125;
 
     private static final double CENTER_TOWER_SIZE = 0.2;
@@ -19,7 +19,16 @@ public class Castle extends Unit {
     private static final double CENTER_TOWER_TRIANGLE_HEIGHT = 0.25;
 
     public Castle(Team team){
-        super(team, 500, 25, 5, 5000);
+        super(team);
+    }
+
+    @Override
+    public void initialize() {
+        setValue(500);
+        setHp(25);
+        setAtk(5);
+        setDelay(3000);
+
         setSellable(false);
         setCanAttack(false);
         setAutoAct(true);
@@ -45,8 +54,16 @@ public class Castle extends Unit {
         }
     }
 
+
     @Override
     public void autoAct() {
         generatePoints(1);
+    }
+
+    @Override
+    public Unit newUnit(Team team) {
+        Unit unit = new Castle(team);
+        unit.initialize();
+        return unit;
     }
 }

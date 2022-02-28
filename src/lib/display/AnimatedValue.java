@@ -31,6 +31,10 @@ public class AnimatedValue extends Number {
         this(timingFunction, duration, start, end, true);
     }
 
+    public AnimatedValue(TimingFunction timingFunction, int duration){
+        this(timingFunction, duration, 0.0, 1.0);
+    }
+
     public AnimatedValue(int duration, double start, double end){
         this(TimingFunction.EASE, duration, start, end, true);
     }
@@ -57,6 +61,10 @@ public class AnimatedValue extends Number {
 
     public boolean isAnimating(){
         return started && !finished;
+    }
+
+    public boolean isFinished(){
+        return finished;
     }
 
     @Override

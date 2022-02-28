@@ -5,6 +5,7 @@ import lib.panels.BattlePanel;
 import lib.ui.ElementBox;
 import lib.ui.ShopItemElementBox;
 import lib.units.Castle;
+import lib.units.Farmer;
 import lib.units.Soldier;
 
 import java.util.ArrayList;
@@ -90,7 +91,7 @@ public class Shop {
     public void focusElement(){
         focused = true;
         shopBodyElement.setBg(ElementBox.UI_BG_COLOR);
-        shopBodyElement.setBorder(ElementBox.UI_BORDER_COLOR);
+        shopBodyElement.setBorder(ElementBox.UI_BORDER_COLOR_LIGHTER);
         for (ShopItemElementBox shopItem : itemElements){
             shopItem.setBg(ElementBox.UI_BG_COLOR);
         }
@@ -137,6 +138,7 @@ public class Shop {
         Shop shop = new Shop(team);
 
         shop.addItem(new Soldier(team));
+        shop.addItem(new Farmer(team));
         shop.addItem(new Castle(team));
 
         shop.initializeElements(panel);

@@ -2,8 +2,11 @@ package lib.panels;
 
 import lib.*;
 import lib.display.AnimatedValue;
+import lib.display.effects.Effect;
 import lib.misc.RowColPoint;
+import lib.shop.Buyable;
 import lib.shop.Shop;
+import lib.shop.ShopItem;
 import lib.ui.PointCounterElementBox;
 import lib.ui.ShopItemElementBox;
 import lib.units.EmptyLand;
@@ -12,6 +15,7 @@ import javax.swing.*;
 import javax.swing.event.MouseInputListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 
 import static lib.ui.ElementBox.Alignment.CENTER;
 
@@ -62,6 +66,9 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     }
     private ControlMode mode;
 
+    // Effects
+    private ArrayList<Effect> effects;
+
     // UI Elements
     private final PointCounterElementBox pointCounter;
 
@@ -91,6 +98,9 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         // Initialize shop
         shop = Shop.generateDefaultShop(this, team);
         shop.selectItem(0);
+
+        // Effects
+        effects = new ArrayList<>();
 
         // ---- Controls
         mode = ControlMode.MAP_CURSOR;
@@ -196,6 +206,18 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
                 }
             }
         }
+
+        // Draw/remove effects
+        for (int i=0; i<effects.size();){
+            Effect effect = effects.get(i);
+            if (effect.isExpired()){
+                effects.remove(i);
+            } else {
+                effect.drawOnGrid(g);
+                i++;
+            }
+        }
+
 
         // Draw cursor
         drawInsetTile(g,
@@ -359,6 +381,10 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         return null;
     }
 
+    // ==== EFFECTS
+    public void addEffect(Effect effect){
+        effects.add(effect);
+    }
 
     // ==== CONTROL LISTENERS
     // mouse
@@ -642,8 +668,7 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
             interactWithTile(mapCursorRow, mapCursorCol);
         }
         else if (mode == ControlMode.SHOP_CURSOR){
-//            changeModeTo(ControlMode.MAP_CURSOR);
-            pointCounter.shake();
+            interactWithShopItem(shopCursorRow*Shop.COLS + shopCursorCol);
         }
     }
 
@@ -673,7 +698,22 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
             }
 
         }
+    }
 
+    public void interactWithShopItem(int index){
+        ShopItem shopItem = shop.getItems().get(index);
+        if (team.canBuy(shopItem)){
+            team.subtractPoints(shopItem.getCost());
+            Buyable item = shopItem.getItem();
+            if (item instanceof Unit){
+                Unit newUnit = ((Unit) item).newUnit(team);
+                battle.getMap().placeTile(newUnit, mapCursorRow, mapCursorCol);
+                newUnit.placeEffect(this);
+                changeModeTo(ControlMode.MAP_CURSOR);
+            }
+        } else {
+            pointCounter.shake();
+        }
     }
 
     // Called when X is pressed.
@@ -698,6 +738,14 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     // ======== Accessors
     public ControlMode getMode() {
         return mode;
+    }
+
+    public Number getZoom() {
+        return zoom;
+    }
+
+    public ArrayList<Effect> getEffects() {
+        return effects;
     }
 }
 

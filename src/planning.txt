@@ -1,0 +1,4 @@
+Units should be able to do any of the following:
+-Attack any unit in their range if they have an attack
+-Move to any tile in their range
+-Be sold

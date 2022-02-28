@@ -11,6 +11,7 @@ public class ElementBox {
     public static final Color UI_BG_COLOR = new Color(8,8,8, 200);
     public static final Color UI_BG_COLOR_TRANSPARENT = new Color(8,8,8, 128);
     public static final Color UI_BORDER_COLOR = new Color(80, 80, 80);
+    public static final Color UI_BORDER_COLOR_LIGHTER = new Color(128, 128, 128);
     public static final Color UI_BORDER_COLOR_TRANSPARENT = new Color(80, 80, 80, 160);
     public static final Font GAME_FONT_SMALL = new Font("monospace", Font.PLAIN, 13);
     public static final Font GAME_FONT = new Font("monospace", Font.PLAIN, 18);

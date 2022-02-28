@@ -30,6 +30,9 @@ public abstract class ClaimedTile extends GeometryTile {
     /** The brightness of this tile's grid square, animated on hover and unhover. **/
     private Number gridSaturation = 0.0;
 
+    public ClaimedTile(){
+        this.team = null;
+    }
     public ClaimedTile(Team team, ShapeOrtho3D... shapes){
         super(shapes);
         this.team = team;
