@@ -1,6 +1,7 @@
 package lib.display;
 
 import lib.Battle;
+import lib.Tile;
 import lib.panels.BattlePanel;
 
 import javax.swing.*;

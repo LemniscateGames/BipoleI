@@ -1,21 +1,12 @@
 package lib;
 
-import lib.display.AnimatedValue;
-import lib.display.TimingFunction;
 import lib.display.shaperendering.ShapeOrtho3D;
 import lib.panels.BattlePanel;
+import lib.ui.TileInfoElementBox;
 
 import java.awt.*;
 
-import static lib.display.ColorUtils.blendColors;
-
 public abstract class ClaimedTile extends GeometryTile {
-    public static final int MOUSE_HOVER_SPEED = 75;
-    public static final double CURSOR_HOVER_GRID_BRIGHTNESS = 0.25;
-    public static final double CURSOR_HOVER_GRID_SATURATION = 0.125;
-    public static final double MOUSE_HOVER_GRID_BRIGHTNESS = 0.15;
-    public static final double MOUSE_HOVER_GRID_SATURATION = 0.075;
-
     /** The team that claimed this tile. **/
     private final Team team;
     /** The map this unit is placed on. Set when onPlace() is called. **/
@@ -24,11 +15,6 @@ public abstract class ClaimedTile extends GeometryTile {
     private int row;
     /** This tile's column on the map it is placed on. **/
     private int column;
-
-    /** The brightness of this tile's grid square, animated on hover and unhover. **/
-    private Number gridBrightness = 0.0;
-    /** The brightness of this tile's grid square, animated on hover and unhover. **/
-    private Number gridSaturation = 0.0;
 
     public ClaimedTile(){
         this.team = null;
@@ -51,6 +37,12 @@ public abstract class ClaimedTile extends GeometryTile {
     }
 
     @Override
+    public void displayInfo(TileInfoElementBox element) {
+        super.displayInfo(element);
+        element.getTitle().setFg(getTeam().getColor(0.25, 0));
+    }
+
+    @Override
     public boolean hasBorder() {
         return true;
     }
@@ -62,11 +54,11 @@ public abstract class ClaimedTile extends GeometryTile {
 
     @Override
     public Color getTileColor(){
-        return team.getColor(gridBrightness.doubleValue(), gridSaturation.doubleValue());
+        return team.getColor(getGridBrightness().doubleValue(), getGridBrightness().doubleValue());
     }
 
     public Color getTileFillColor(){
-        return team.getTileFillColor(gridBrightness.doubleValue()*.3, gridSaturation.doubleValue()*.3);
+        return team.getTileFillColor(getGridBrightness().doubleValue()*.3, getGridBrightness().doubleValue()*.3);
     }
 
     @Override
@@ -97,13 +89,6 @@ public abstract class ClaimedTile extends GeometryTile {
     public void onMouseUnhover() {
         super.onMouseUnhover();
         updateGridColors();
-    }
-
-    public void updateGridColors(){
-        final double DESIRED_BRIGHTNESS = isHovered() ? CURSOR_HOVER_GRID_BRIGHTNESS : (isMouseHovered() ? MOUSE_HOVER_GRID_BRIGHTNESS : 0.0);
-        final double DESIRED_SATURATION = isHovered() ? CURSOR_HOVER_GRID_SATURATION : (isMouseHovered() ? MOUSE_HOVER_GRID_SATURATION : 0.0);
-        gridBrightness = new AnimatedValue(TimingFunction.LINEAR, MOUSE_HOVER_SPEED, gridBrightness.doubleValue(), DESIRED_BRIGHTNESS);
-        gridSaturation = new AnimatedValue(TimingFunction.LINEAR, MOUSE_HOVER_SPEED, gridSaturation.doubleValue(), DESIRED_SATURATION);
     }
 
     // accessors

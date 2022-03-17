@@ -23,6 +23,16 @@ public class Castle extends Unit {
     }
 
     @Override
+    public String name() {
+        return "Castle";
+    }
+
+    @Override
+    public String desc() {
+        return "Generates points over time. Cannot attack or move. If this tile is destroyed, you lose the game.";
+    }
+
+    @Override
     public void initialize() {
         setValue(500);
         setHp(25);
@@ -30,7 +40,7 @@ public class Castle extends Unit {
         setDelay(3000);
 
         setSellable(false);
-        setCanAttack(false);
+        setActable(false);
         setAutoAct(true);
 
         // main body

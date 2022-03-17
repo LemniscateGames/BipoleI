@@ -2,13 +2,14 @@ package lib;
 
 import lib.panels.BattlePanel;
 import lib.ui.ElementBox;
+import lib.ui.TileInfoElementBox;
 import lib.units.EmptyLand;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 
-public class ContestedTile implements Tile {
+public class ContestedTile extends ResponsiveTile {
     private static final int CAPTURE_TIME = 6000;
 
     /** The map this tile is on. **/
@@ -29,6 +30,21 @@ public class ContestedTile implements Tile {
 
         ActionListener onCaptureAction = evt -> onCapture();
         contestProgressTimer = new Timer(CAPTURE_TIME, onCaptureAction);
+    }
+
+    @Override
+    public String name() {
+        return "-";
+    }
+
+    @Override
+    public String desc() {
+        return "This tile is being contested.";
+    }
+
+    @Override
+    public String header() {
+        return name();
     }
 
     @Override
@@ -84,6 +100,25 @@ public class ContestedTile implements Tile {
     }
 
     @Override
+    public Color getColor() {
+        return team.getColor(getBrightness().doubleValue(), getSaturation().doubleValue());
+    }
+
+    @Override
+    public Color getTileColor(){
+        return team.getColor(getGridBrightness().doubleValue(), getGridBrightness().doubleValue());
+    }
+
+    @Override
+    public Color getUnitColor() {
+        return team.getUnitColor();
+    }
+
+    public Color getTileFillColor(){
+        return team.getTileFillColor(getGridBrightness().doubleValue()*.3, getGridBrightness().doubleValue()*.3);
+    }
+
+    @Override
     public void drawUI(Graphics g, double x, double y, double z) {
         BattlePanel.drawBar(g, x, y, z,
                 (double)(System.currentTimeMillis()-contestStartTime)/CAPTURE_TIME, team.getColor());
@@ -129,4 +164,6 @@ public class ContestedTile implements Tile {
     public boolean hasBorder() {
         return false;
     }
+
+
 }

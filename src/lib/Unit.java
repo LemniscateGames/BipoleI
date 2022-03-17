@@ -2,9 +2,8 @@ package lib;
 
 import lib.display.AnimatedValue;
 import lib.display.TimingFunction;
-import lib.display.effects.Effect;
+import lib.display.effects.FloatingText;
 import lib.display.effects.TileShockwave;
-import lib.display.shaperendering.ShapeOrtho3D;
 import lib.panels.BattlePanel;
 import lib.shop.Buyable;
 
@@ -37,9 +36,9 @@ public abstract class Unit extends ClaimedTile implements Buyable {
 
     // ======== Configuration
     /** If this unit can attack. **/
-    private boolean canAttack = true;
+    private boolean actable = true;
     /** If this unit can be sold. Typically set at initialization with setBuyable(), only really used by castle as of now. **/
-    private boolean isSellable = true;
+    private boolean sellable = true;
     /** If this unit automatically acts when it is ready. **/
     private boolean autoAct = false;
 
@@ -50,6 +49,9 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     private Timer readyTimer;
     /** If this unit is ready to act or not. Set to true when the readiness timer expires. **/
     private boolean isReady;
+
+    /** The panel that this unit was placed on. Saved when place effect is called, saved to send FLoatingText effects to. **/
+    private BattlePanel panel;
 
     // ==== Effects
     private AnimatedValue placeAnimator;
@@ -70,20 +72,9 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     /** Called when this Unit is constructed. Initializes necessary stats. **/
     public abstract void initialize();
 
-    public void setValue(int value) {
-        this.value = value;
-    }
-    public void setHp(int hp) {
-        this.hp = hp;
-    }
-    public void setMaxHp(int maxHp) {
-        this.maxHp = maxHp;
-    }
-    public void setAtk(int atk) {
-        this.atk = atk;
-    }
-    public void setDelay(int delay) {
-        this.delay = delay;
+    @Override
+    public String header() {
+        return String.format("%s %d/%d", name(), atk, hp);
     }
 
     // ------------ METHODS
@@ -91,7 +82,7 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     @Override
     public void onPlace(Map map, int r, int c) {
         super.onPlace(map, r, c);
-        if (canAttack || autoAct){
+        if (actable || autoAct){
             isReady = false;
             setSaturation(UNREADY_SATURATION);
 
@@ -106,10 +97,21 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     // Effects
     /** Place effect to be run when bought from the shop and placed. Looks kinda epic. **/
     public void placeEffect(BattlePanel panel){
+        this.panel = panel;
         placeAnimator = new AnimatedValue(TimingFunction.EASE_OUT_FAST, 1000);
 
         panel.addEffect(new TileShockwave(panel, getRow(), getColumn(), getTeam(),
                 placeAnimator, 0.5));
+    }
+
+    // Effects
+    /** Place effect to be run when bought from the shop and placed. Looks kinda epic. **/
+    public void sellEffect(BattlePanel panel){
+        this.panel = panel;
+        placeAnimator = new AnimatedValue(TimingFunction.EASE_OUT_FAST, 1000);
+
+        panel.addEffect(new TileShockwave(panel, getRow(), getColumn(), getTeam().getColor(),
+                placeAnimator, 0.375));
     }
 
     // ======== Timing/Readiness
@@ -133,12 +135,16 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     /** Generate points for this unit's team. Typically used on auto-acting tiles such as farmers and castles. **/
     public void generatePoints(int amount){
         getTeam().addPoints(amount);
+        if (panel != null){
+            panel.addEffect(new FloatingText(panel, getRow(), getColumn(),
+                    "+"+amount, getTeam().getPointColor(), 0.5));
+        }
     }
 
     // ======== UI
     @Override
     public void drawUI(Graphics g, double x, double y, double z) {
-        if ((canAttack || autoAct) && !isReady){
+        if ((actable || autoAct) && !isReady){
             BattlePanel.drawBar(g, x, y, z, readinessPercent(), READINESS_COLOR);
         }
     }
@@ -154,13 +160,13 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     // Information
     /** Percentage of HP this unit has remaining. **/
     public double hpPercent(){
-        return (double)hp/maxHp;
+        return (double)hp / maxHp;
     }
-    /** Get the sell value of this unit (value*HP%/2) **/
+    /** Get the sell value of this unit (value * HP% / 2) **/
     public int sellValue(){
         return (int) Math.ceil(value * hpPercent() / 2);
     }
-    /** Get the value gained by an enemy when they destroy this unit (value/3). **/
+    /** Get the value gained by an enemy when they destroy this unit (value / 2). **/
     public int destroyValue(){
         return (int) Math.ceil((double)value / 2);
     }
@@ -175,23 +181,71 @@ public abstract class Unit extends ClaimedTile implements Buyable {
         return value;
     }
 
+    /** Controllable if this unit's team is the same. **/
+    @Override
+    public boolean isControllable(Team team) {
+        return team == getTeam();
+    }
+
     // ======== Accessors
-    public boolean isCanAttack() {
-        return canAttack;
+    public int getValue() {
+        return value;
+    }
+    public void setValue(int value) {
+        this.value = value;
+    }
+    public int getHp() {
+        return hp;
+    }
+    public void setHp(int hp) {
+        this.maxHp = hp;
+        this.hp = hp;
+    }
+    public int getMaxHp() {
+        return maxHp;
+    }
+    public void setMaxHp(int maxHp) {
+        this.maxHp = maxHp;
+    }
+    public int getAtk() {
+        return atk;
+    }
+    public void setAtk(int atk) {
+        this.atk = atk;
+    }
+    public int getDelay() {
+        return delay;
+    }
+    public void setDelay(int delay) {
+        this.delay = delay;
+    }
+    public long getStartTime() {
+        return startTime;
+    }
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+    public boolean isActable() {
+        return actable;
     }
     public boolean isSellable() {
-        return isSellable;
+        return sellable;
     }
     public boolean isAutoAct() {
         return autoAct;
     }
     public void setSellable(boolean value){
-        isSellable = value;
+        sellable = value;
     }
-    public void setCanAttack(boolean value){
-        canAttack = value;
+    public void setActable(boolean value){
+        actable = value;
     }
     public void setAutoAct(boolean value){
         autoAct = value;
+    }
+
+    @Override
+    public void setPanel(BattlePanel panel) {
+        this.panel = panel;
     }
 }

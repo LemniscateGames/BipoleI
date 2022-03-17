@@ -18,6 +18,7 @@ public class PointCounterElementBox extends ElementBox {
 
     public PointCounterElementBox(int x, int y, int width, int height) {
         super(x, y, width, height);
+        setFont(ElementBox.GAME_FONT_BIG);
     }
 
     /** Shake this element's text. Call when trying to buy an item that you can't afford. **/
@@ -59,12 +60,12 @@ public class PointCounterElementBox extends ElementBox {
 
         if (getText() != null){
             FontMetrics metrics = g.getFontMetrics(getFont());
-            int strX = getX() + (getWidth() - metrics.stringWidth(getText())) / 2;
+            int strX = getX() + (getWidth() - metrics.stringWidth(getText()[0])) / 2;
             int strY = getY() + ((getHeight() - metrics.getHeight()) / 2) + metrics.getAscent();
 
             g.setColor(getFg());
             g.setFont(getFont());
-            g.drawString(getText(), strX + textOffset, strY);
+            g.drawString(getText()[0], strX + textOffset, strY);
         }
     }
 }

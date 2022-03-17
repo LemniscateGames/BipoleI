@@ -1,13 +1,21 @@
 package lib;
 
 import lib.display.AnimatedValue;
+import lib.display.TimingFunction;
 import lib.panels.BattlePanel;
+import lib.ui.ElementBox;
+import lib.ui.TileInfoElementBox;
 
 import java.awt.*;
 
 /** A tile that lights up when hovered over. **/
 public abstract class ResponsiveTile implements Tile {
     // CONSTANTS
+    public static final int MOUSE_HOVER_SPEED = 75;
+    public static final double CURSOR_HOVER_GRID_BRIGHTNESS = 0.25;
+    public static final double CURSOR_HOVER_GRID_SATURATION = 0.125;
+    public static final double MOUSE_HOVER_GRID_BRIGHTNESS = 0.15;
+    public static final double MOUSE_HOVER_GRID_SATURATION = 0.075;
     private static final double BRIGHTNESS_HOVER = 0.25;
     private static final double BRIGHTNESS_MOUSE_HOVER = 0.15;
 
@@ -22,6 +30,10 @@ public abstract class ResponsiveTile implements Tile {
     /** If this tile is currently hovered over by mouse. **/
     private boolean isMouseHovered;
 
+    /** The brightness of this tile's grid square, animated on hover and unhover. **/
+    private Number gridBrightness = 0.0;
+    /** The brightness of this tile's grid square, animated on hover and unhover. **/
+    private Number gridSaturation = 0.0;
 
     public ResponsiveTile() {
         this.brightness = 0.0;
@@ -35,6 +47,13 @@ public abstract class ResponsiveTile implements Tile {
         } else {
             setBrightness(DESIRED_BRIGHTNESS);
         }
+    }
+
+    public void updateGridColors(){
+        final double DESIRED_BRIGHTNESS = isHovered() ? CURSOR_HOVER_GRID_BRIGHTNESS : (isMouseHovered() ? MOUSE_HOVER_GRID_BRIGHTNESS : 0.0);
+        final double DESIRED_SATURATION = isHovered() ? CURSOR_HOVER_GRID_SATURATION : (isMouseHovered() ? MOUSE_HOVER_GRID_SATURATION : 0.0);
+        gridBrightness = new AnimatedValue(TimingFunction.LINEAR, MOUSE_HOVER_SPEED, gridBrightness.doubleValue(), DESIRED_BRIGHTNESS);
+        gridSaturation = new AnimatedValue(TimingFunction.LINEAR, MOUSE_HOVER_SPEED, gridSaturation.doubleValue(), DESIRED_SATURATION);
     }
 
     public void onHover() {
@@ -96,5 +115,13 @@ public abstract class ResponsiveTile implements Tile {
 
     public boolean isMouseHovered() {
         return isMouseHovered;
+    }
+
+    public Number getGridBrightness() {
+        return gridBrightness;
+    }
+
+    public Number getGridSaturation() {
+        return gridSaturation;
     }
 }

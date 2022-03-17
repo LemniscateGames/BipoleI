@@ -7,6 +7,7 @@ import java.awt.*;
 public abstract class Effect {
     private final BattlePanel panel;
     private final double row, col;
+    private boolean drawInFront;
 
     public Effect(BattlePanel panel, double row, double col){
         this.panel = panel;
@@ -37,5 +38,13 @@ public abstract class Effect {
 
     public double getCol() {
         return col;
+    }
+
+    public boolean isDrawInFront() {
+        return drawInFront;
+    }
+
+    public void setDrawInFront(boolean drawInFront) {
+        this.drawInFront = drawInFront;
     }
 }

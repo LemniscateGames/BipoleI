@@ -27,6 +27,19 @@ public class TileShockwave extends Effect {
         );
     }
 
+    public TileShockwave(BattlePanel panel, double row, double col, Color waveEndColor,
+                         AnimatedValue animator, double radius) {
+        super(panel, row, col);
+        this.animator = animator;
+        this.radius = radius;
+        this.waveEndColor = new Color(
+                waveEndColor.getRed(),
+                waveEndColor.getGreen(),
+                waveEndColor.getBlue(),
+                0
+        );
+    }
+
     @Override
     public void draw(Graphics g, double x, double y, double z) {
         Color waveColor = ColorUtils.blendColors(Color.WHITE, waveEndColor, animator.doubleValue());

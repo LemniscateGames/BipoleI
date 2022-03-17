@@ -2,11 +2,20 @@ package lib.units;
 
 import lib.Team;
 import lib.Unit;
-import lib.display.shaperendering.shapes.RectangularPrism;
 
 public class EmptyLand extends Unit {
     public EmptyLand(Team team) {
         super(team);
+    }
+
+    @Override
+    public String name() {
+        return "-";
+    }
+
+    @Override
+    public String desc() {
+        return "";
     }
 
     @Override
@@ -22,6 +31,11 @@ public class EmptyLand extends Unit {
         setHp(1);
         setAtk(0);
 
-        setCanAttack(false);
+        setActable(false);
+    }
+
+    @Override
+    public boolean isControllable(Team team) {
+        return false;
     }
 }

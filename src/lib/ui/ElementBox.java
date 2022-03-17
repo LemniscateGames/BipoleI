@@ -3,6 +3,8 @@ package lib.ui;
 import lib.panels.ElementPanel;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /** A fixed position rectangle on the screen that can have centered text. **/
 public class ElementBox {
@@ -13,9 +15,11 @@ public class ElementBox {
     public static final Color UI_BORDER_COLOR = new Color(80, 80, 80);
     public static final Color UI_BORDER_COLOR_LIGHTER = new Color(128, 128, 128);
     public static final Color UI_BORDER_COLOR_TRANSPARENT = new Color(80, 80, 80, 160);
+
     public static final Font GAME_FONT_SMALL = new Font("monospace", Font.PLAIN, 13);
-    public static final Font GAME_FONT = new Font("monospace", Font.PLAIN, 18);
-    public static final Font GAME_FONT_BIG = new Font("monospace", Font.PLAIN, 23);
+    public static final Font GAME_FONT = new Font("monospace", Font.PLAIN, 16);
+    public static final Font GAME_FONT_BIG = new Font("monospace", Font.PLAIN, 20);
+
     public enum Alignment {
         NONE, START, CENTER, END
     }
@@ -23,7 +27,7 @@ public class ElementBox {
     // Fields
     private ElementPanel panel;
     private int width, height;
-    private String text;
+    private String[] text;
     private Color fg = UI_FG_COLOR;
     private Color bg = UI_BG_COLOR;
     private Color border = UI_BORDER_COLOR;
@@ -32,6 +36,8 @@ public class ElementBox {
     private Alignment yAlign = Alignment.START;
     private Alignment xTextAlign = Alignment.CENTER;
     private Alignment yTextAlign = Alignment.CENTER;
+    private boolean wrapText;
+    private boolean textWrapCalced;
     private boolean isTransparentBg;
 
     // not aligned
@@ -51,15 +57,43 @@ public class ElementBox {
         this.y = y;
         this.width = width;
         this.height = height;
-
-        xAlign = Alignment.NONE;
-        yAlign = Alignment.NONE;
     }
 
     /** Initialize this element's components on things that are dependent on the ElementPanel ti is instantiated into.
      * Should be overridden if neccesary. **/
     public void initialize(ElementPanel panel){
         setPanel(panel);
+    }
+
+     /** Recalculate wrapped text. Called on initialization and should be called when text or width is changed. **/
+    public void calcWrapText(Graphics g){
+        // If already calculated return (No need to calculate this for multiple elementboxes every frame)
+//        if (textWrapCalced) return;
+        if (text == null) return;
+
+        FontMetrics metrics = g.getFontMetrics(font);
+        int maxWidth = getWidth();
+        ArrayList<String> lines = new ArrayList<>();
+        // Consolidate ALL words into one array
+        String[] words = String.join(" ", text).split("\\s+");
+
+        StringBuilder line = new StringBuilder();
+        int lineWidth = 0;
+        for (String word : words) {
+            if (lineWidth + metrics.stringWidth(word) > maxWidth) {
+                lines.add(line.toString());
+                line = new StringBuilder();
+                lineWidth = 0;
+            }
+
+            lineWidth += metrics.stringWidth(word);
+            line.append(word);
+            line.append(" ");
+        }
+
+        lines.add(line.toString());
+        text = lines.toArray(new String[0]);
+        textWrapCalced = true;
     }
 
     /** Anything that has to be initialized on this ElementBox before the super draw call is made should be overridden in this method. **/
@@ -78,30 +112,35 @@ public class ElementBox {
             g.drawRect(getX(), getY(), getWidth(), getHeight());
         }
 
-        if (text != null){
-            FontMetrics metrics = g.getFontMetrics(font);
+        g.setColor(fg);
+        g.setFont(font);
+        calcWrapText(g);
+        if (text == null) return;
+
+        FontMetrics metrics = g.getFontMetrics(font);
+        int lineHeight = (int)(metrics.getHeight());
+        for (int i=0; i<text.length; i++){
+            String line = text[i];
 
             int strX, strY;
             switch(xTextAlign){
                 case CENTER:
-                    strX = getX() + (width - metrics.stringWidth(text)) / 2; break;
+                    strX = getX() + (getWidth() - metrics.stringWidth(line)) / 2; break;
                 case END:
-                    strX = getX() + width - metrics.stringWidth(text); break;
+                    strX = getX() + getWidth() - metrics.stringWidth(line); break;
                 default:
                     strX = getX(); break;
             }
             switch(yTextAlign){
                 case CENTER:
-                    strY = getY() + (height - metrics.getHeight() + metrics.getAscent()) / 2; break;
+                    strY = getY() + (getHeight() - lineHeight*(text.length-1-i)*2 + metrics.getAscent()) / 2; break;
                 case END:
-                    strY = getY() + height - metrics.getHeight() + metrics.getAscent(); break;
+                    strY = getY() + getHeight() - lineHeight*(text.length-1-i); break;
                 default:
-                    strY = getY() + metrics.getAscent(); break;
+                    strY = getY() + lineHeight*i + metrics.getAscent(); break;
             }
 
-            g.setColor(fg);
-            g.setFont(font);
-            g.drawString(text, strX, strY);
+            g.drawString(line, strX, strY);
         }
     }
 
@@ -154,6 +193,19 @@ public class ElementBox {
         return fillPanelY ? panel.getHeight() : height;
     }
 
+    public int getInnerWidth(){
+        return getRight() - getLeft();
+    }
+
+    public int getInnerHeight(){
+        return getBottom() - getTop();
+    }
+
+    public void setPosition(int x, int y){
+        this.x = x;
+        this.y = y;
+    }
+
     public void setDimensions(int width, int height){
         this.width = width;
         this.height = height;
@@ -191,11 +243,14 @@ public class ElementBox {
     public void setBorder(Color border) {
         this.border = border;
     }
-    public String getText() {
+    public String[] getText() {
         return text;
     }
-    public void setText(String text) {
+    public void setText(String[] text) {
         this.text = text;
+    }
+    public void setText(String text) {
+        this.text = new String[]{text};
     }
     public Font getFont() {
         return font;
@@ -226,6 +281,9 @@ public class ElementBox {
     }
     public void setyTextAlign(Alignment yTextAlign) {
         this.yTextAlign = yTextAlign;
+    }
+    public void setWrapText(boolean wrapText) {
+        this.wrapText = wrapText;
     }
     public void setLeft(int left) {
         this.left = left;

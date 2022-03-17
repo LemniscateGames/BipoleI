@@ -12,10 +12,20 @@ public class Soldier extends Unit {
     }
 
     @Override
+    public String name() {
+        return "Soldier";
+    }
+
+    @Override
+    public String desc() {
+        return "A basic attacker.";
+    }
+
+    @Override
     public void initialize() {
-        setValue(2);
+        setValue(3);
         setHp(5);
-        setAtk(2);
+        setAtk(3);
         setDelay(7500);
 
         addShape(new RectangularPrism(0.3, 0.3, 0.32));

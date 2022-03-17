@@ -7,10 +7,7 @@ import lib.misc.RowColPoint;
 import lib.shop.Buyable;
 import lib.shop.Shop;
 import lib.shop.ShopItem;
-import lib.ui.ElementBox;
-import lib.ui.PointCounterElementBox;
-import lib.ui.ShopItemElementBox;
-import lib.ui.UnitInfobox;
+import lib.ui.*;
 import lib.units.EmptyLand;
 
 import javax.swing.*;
@@ -52,19 +49,21 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     // Cursor
     private int mapCursorRow = 0;
     private int mapCursorCol = 0;
-    private int shopCursorRow = 0;
-    private int shopCursorCol = 0;
     private Number mapCursorDisplayRow = 0;
     private Number mapCursorDisplayCol = 0;
     private int mouseRow = 0;
     private int mouseCol = 0;
+
+    private int shopCursorRow = 0;
+    private int shopCursorCol = 0;
     private int mouseShopItem = 0;
+    private int infoItemSelected = 0;
 
     // Controls
     private Point clickPoint;
     private double clickCameraRowPos, clickCameraColPos;
     public enum ControlMode {
-        MAP_CURSOR, SHOP_CURSOR
+        MAP_CURSOR, SHOP_CURSOR, INFO_CURSOR
     }
     private ControlMode mode;
 
@@ -73,12 +72,12 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
 
     // UI Elements
     private final PointCounterElementBox pointCounter;
-    private final UnitInfobox unitInfobox;
 
     // Other Variables
     private final Battle battle;
     private final Team team;
     private final Shop shop;
+    private final TileInfoElementBox infoBox;
 
     // ==== CONSTRUCTORS
     public BattlePanel(Battle battle) {
@@ -93,11 +92,11 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         screenRefreshTimer.start();
 
         // Unit infobox
-        unitInfobox = new UnitInfobox(this);
-        unitInfobox.setxAlign(ElementBox.Alignment.START);
-        unitInfobox.setAlignPanelX(true);
+        infoBox = new TileInfoElementBox(this, team);
+        infoBox.setxAlign(ElementBox.Alignment.START);
+        infoBox.setAlignPanelX(true);
 //        unitInfobox.setFillPanelY(true);
-        super.addElement(unitInfobox);
+        super.addElement(infoBox);
 
         // point counter
         pointCounter = new PointCounterElementBox(0, 0, 120, 40);
@@ -122,25 +121,38 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
 
         // keyboard
         super.getInputMap().put(KeyStroke.getKeyStroke("UP"), "up");
-        super.getInputMap().put(KeyStroke.getKeyStroke("W"), "up");
         super.getActionMap().put("up", new CursorUpAction());
         super.getInputMap().put(KeyStroke.getKeyStroke("DOWN"), "down");
-        super.getInputMap().put(KeyStroke.getKeyStroke("S"), "down");
         super.getActionMap().put("down", new CursorDownAction());
         super.getInputMap().put(KeyStroke.getKeyStroke("LEFT"), "left");
-        super.getInputMap().put(KeyStroke.getKeyStroke("A"), "left");
         super.getActionMap().put("left", new CursorLeftAction());
         super.getInputMap().put(KeyStroke.getKeyStroke("RIGHT"), "right");
-        super.getInputMap().put(KeyStroke.getKeyStroke("D"), "right");
         super.getActionMap().put("right", new CursorRightAction());
 
         super.getInputMap().put(KeyStroke.getKeyStroke("Z"), "interact");
         super.getActionMap().put("interact", new InteractAction());
         super.getInputMap().put(KeyStroke.getKeyStroke("X"), "cancel");
         super.getActionMap().put("cancel", new CancelAction());
+        super.getInputMap().put(KeyStroke.getKeyStroke("C"), "context");
+        super.getActionMap().put("context", new ContextAction());
+        super.getInputMap().put(KeyStroke.getKeyStroke("S"), "sell");
+        super.getActionMap().put("sell", new SellAction());
+        super.getInputMap().put(KeyStroke.getKeyStroke("R"), "resetCamera");
+        super.getActionMap().put("resetCamera", new ResetCameraAction());
 
         // ---- other
         super.setBackground(new Color(16,16,16));
+
+        // ---- Link up units to this panel
+
+        for (int r=0; r<battle.getMap().numRows(); r++){
+            for (int c=0; c<battle.getMap().numCols(); c++){
+                Tile tile = battle.getMap().getTile(r, c);
+                if (tile instanceof Unit){
+                    tile.setPanel(this);
+                }
+            }
+        }
     }
 
     // ==== MAIN DRAW
@@ -217,13 +229,13 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
             }
         }
 
-        // Draw/remove effects
+        // Draw behind unit effects and remove inactive effects
         for (int i=0; i<effects.size();){
             Effect effect = effects.get(i);
             if (effect.isExpired()){
                 effects.remove(i);
             } else {
-                effect.drawOnGrid(g);
+                if (!effect.isDrawInFront()) effect.drawOnGrid(g);
                 i++;
             }
         }
@@ -256,8 +268,14 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
             }
         }
 
+        // Draw front-of unit effects
+        for (Effect effect : effects){
+            if (effect.isDrawInFront()) effect.drawOnGrid(g);
+        }
+
         // Draw UI elementBoxes
         drawElements(g);
+        updateUnitInfobox();
     }
 
     // ==== FEATURES (static)
@@ -403,7 +421,10 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         // Shop click
         if (e.getX() > getWidth()-Shop.SHOP_WIDTH){
             changeModeTo(ControlMode.SHOP_CURSOR);
+            interactWithShopItem(shopCursorRow*Shop.COLS + shopCursorCol);
         }
+
+        // TODO: infobox select click
 
         // Map click
         else {
@@ -475,6 +496,8 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
             }
         }
 
+        // TODO: check if mouse hovered over infobox
+
         // Map
         else {
             RowColPoint mouseGridPos = getGridPos(e.getX(), e.getY());
@@ -519,6 +542,26 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
             cancel();
         }
     }
+    public class ContextAction extends AbstractAction{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            context();
+        }
+    }
+    public class SellAction extends AbstractAction{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            sell();
+        }
+    }
+    public class ResetCameraAction extends AbstractAction{
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            zoom = new AnimatedValue(CAMERA_SPEED, zoom.doubleValue(), 80.0);
+            cameraRowPos = new AnimatedValue(CAMERA_SPEED, cameraRowPos.doubleValue(), mapCursorRow);
+            cameraColPos = new AnimatedValue(CAMERA_SPEED, cameraColPos.doubleValue(), mapCursorCol);
+        }
+    }
 
     public class CursorUpAction extends AbstractAction{
         @Override
@@ -549,10 +592,19 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         if (mode == newMode) return;
 
         if (mode == ControlMode.SHOP_CURSOR) shop.unfocusElement();
+        if (mode == ControlMode.INFO_CURSOR) {
+            infoBox.unselectItem(infoItemSelected);
+            infoBox.unfocusElement();
+        }
 
         mode = newMode;
 
         if (mode == ControlMode.SHOP_CURSOR) shop.focusElement();
+        if (mode == ControlMode.INFO_CURSOR) {
+            infoBox.focusElement();
+            infoItemSelected = 0;
+            infoBox.selectItem(0);
+        }
     }
 
     // ==== USER INTERACTION METHODS (called via controls)
@@ -580,7 +632,6 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
                 if (newTile != null) newTile.onHover();
 
                 moveCameraToCursor();
-                updateUnitInfobox();
             }
         }
 
@@ -592,6 +643,15 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
                 shopCursorCol += col;
                 mouseShopItem = shopCursorRow*Shop.COLS + shopCursorCol;
                 shop.selectItem(shopCursorRow*Shop.COLS + shopCursorCol);
+            }
+        }
+
+        else if (mode == ControlMode.INFO_CURSOR){
+            // (col is ignored)
+            if (infoItemSelected + row >= 0 && infoItemSelected + row < infoBox.getButtons().size()) {
+                infoBox.unselectItem(infoItemSelected);
+                infoItemSelected += row;
+                infoBox.selectItem(infoItemSelected);
             }
         }
     }
@@ -618,7 +678,6 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
             if (newTile != null) newTile.onHover();
 
             moveCameraToCursor();
-            updateUnitInfobox();
         }
 
         else if (mode == ControlMode.SHOP_CURSOR){
@@ -629,6 +688,14 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
                 shopCursorCol = col;
                 mouseShopItem = shopCursorRow*Shop.COLS + shopCursorCol;
                 shop.selectItem(shopCursorRow*Shop.COLS + shopCursorCol);
+            }
+        }
+
+        else if (mode == ControlMode.INFO_CURSOR){
+            if (row >= 0 && row < infoBox.getButtons().size()) {
+                infoBox.unselectItem(infoItemSelected);
+                infoItemSelected = row;
+                infoBox.selectItem(infoItemSelected);
             }
         }
     }
@@ -682,6 +749,9 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         else if (mode == ControlMode.SHOP_CURSOR){
             interactWithShopItem(shopCursorRow*Shop.COLS + shopCursorCol);
         }
+        else if (mode == ControlMode.INFO_CURSOR){
+            interactWithInfoButton(infoItemSelected);
+        }
     }
 
     public void interactWithTile(int row, int col){
@@ -692,7 +762,6 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
                 && battle.getMap().hasAdjacentOwnedTile(team, row, col)
                 && team.subtractPoints(1)){
             battle.getMap().placeTile(new ContestedTile(team), row, col);
-
         }
         // Contest a tile that is already bing contested if a contest tile is interacted with
         else if (selectedTile instanceof ContestedTile){
@@ -704,42 +773,100 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
             // If owned by player
             if (((ClaimedTile) selectedTile).getTeam() == team){
                 // If this is empty land, open up the shop to build something
-                if (selectedTile instanceof EmptyLand){
+                if (mode == ControlMode.MAP_CURSOR && selectedTile instanceof EmptyLand){
                     changeModeTo(ControlMode.SHOP_CURSOR);
                 }
             }
+        }
 
+        // If controlled by the player
+        else if (selectedTile != null && selectedTile.isControllable(team)){
+            changeModeTo(ControlMode.INFO_CURSOR);
+        }
+    }
+
+    public void openContextForTile(int row, int col){
+        Tile selectedTile = cursorTile();
+
+        if (selectedTile != null && selectedTile.isControllable(team)){
+            changeModeTo(ControlMode.INFO_CURSOR);
         }
     }
 
     public void interactWithShopItem(int index){
         ShopItem shopItem = shop.getItems().get(index);
-        if (team.canBuy(shopItem)){
-            team.subtractPoints(shopItem.getCost());
+        if (shopItem != null && team.canBuy(shopItem)){
             Buyable item = shopItem.getItem();
             if (item instanceof Unit){
-                Unit newUnit = ((Unit) item).newUnit(team);
-                battle.getMap().placeTile(newUnit, mapCursorRow, mapCursorCol);
-                newUnit.placeEffect(this);
-                changeModeTo(ControlMode.MAP_CURSOR);
+                Tile mapTile = cursorTile();
+                if (mapTile instanceof ClaimedTile && ((ClaimedTile) mapTile).getTeam() == team) {
+                    team.subtractPoints(shopItem.getCost());
+                    Unit newUnit = ((Unit) item).newUnit(team);
+                    battle.getMap().placeTile(newUnit, mapCursorRow, mapCursorCol);
+                    newUnit.placeEffect(this);
+                    changeModeTo(ControlMode.MAP_CURSOR);
+                }
             }
         } else {
             pointCounter.shake();
         }
     }
 
+    public void interactWithInfoButton(int index){
+        InfoButton button = infoBox.getButton(index);
+        if (!button.isEnabled()) return;
+
+        if (button instanceof SellButton){
+            sellCursorTile();
+        }
+
+        else if (button instanceof MoveButton){
+            System.out.println("move pressed :)");
+            // TODO: move selected unit
+        }
+    }
+
+    public void sellCursorTile(){
+        Unit cursorUnit = cursorUnit();
+        if (cursorUnit != null && !(cursorUnit instanceof EmptyLand) && cursorUnit.isSellable()){
+            int value = cursorUnit.sellValue();
+            System.out.println("value: "+value);
+            team.addPoints(value);
+            cursorUnit.sellEffect(this);
+            battle.getMap().placeTile(new EmptyLand(team), mapCursorRow, mapCursorCol);
+            changeModeTo(ControlMode.MAP_CURSOR);
+        }
+    }
+
     // Called when X is pressed.
     public void cancel(){
-        if (mode == ControlMode.SHOP_CURSOR){
+        if (mode == ControlMode.SHOP_CURSOR || mode == ControlMode.INFO_CURSOR){
             changeModeTo(ControlMode.MAP_CURSOR);
+        }
+    }
+
+    // Called when C is pressed.
+    public void context(){
+        if (mode == ControlMode.MAP_CURSOR){
+            Tile selectedTile = cursorTile();
+            if (selectedTile.isControllable(team)){
+                changeModeTo(ControlMode.INFO_CURSOR);
+            }
+        }
+    }
+
+    // Called when S is pressed.
+    public void sell(){
+        if (mode == ControlMode.MAP_CURSOR || mode == ControlMode.INFO_CURSOR){
+            sellCursorTile();
         }
     }
 
     // ======== UI Stuff
     public void updateUnitInfobox(){
-        Unit selectedUnit = cursorUnit();
-        if (selectedUnit != null){
-            unitInfobox.displayUnit(selectedUnit);
+        Tile selectedTile = cursorTile();
+        if (selectedTile != null){
+            selectedTile.displayInfo(infoBox);
         }
     }
 
