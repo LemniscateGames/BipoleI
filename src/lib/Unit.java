@@ -4,6 +4,7 @@ import lib.display.AnimatedValue;
 import lib.display.TimingFunction;
 import lib.display.effects.FloatingText;
 import lib.display.effects.TileShockwave;
+import lib.gameplay.tiletypes.ClaimedTile;
 import lib.panels.BattlePanel;
 import lib.shop.Buyable;
 

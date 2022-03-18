@@ -1,6 +1,5 @@
 package lib.display.shaperendering.shapes;
 
-import lib.ResponsiveTile;
 import lib.display.shaperendering.Face3D;
 import lib.display.shaperendering.Point3D;
 import lib.display.shaperendering.Segment3D;

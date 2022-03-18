@@ -1,10 +1,10 @@
-package lib;
+package lib.gameplay.tiletypes;
 
 import lib.display.shaperendering.ShapeOrtho3D;
+import lib.gameplay.tiletypes.ResponsiveTile;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /** A responsive tile that has ShapeOrtho3Ds that it draws for its draw() method. **/
 public abstract class GeometryTile extends ResponsiveTile {

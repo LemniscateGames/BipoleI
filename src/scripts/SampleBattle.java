@@ -1,7 +1,6 @@
 package scripts;
 
 import lib.Battle;
-import lib.ClaimedTile;
 import lib.Map;
 import lib.Team;
 import lib.display.BipoleIFrame;

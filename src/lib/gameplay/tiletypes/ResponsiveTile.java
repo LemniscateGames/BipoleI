@@ -1,5 +1,6 @@
-package lib;
+package lib.gameplay.tiletypes;
 
+import lib.Tile;
 import lib.display.AnimatedValue;
 import lib.display.TimingFunction;
 import lib.panels.BattlePanel;
@@ -18,12 +19,15 @@ public abstract class ResponsiveTile implements Tile {
     public static final double MOUSE_HOVER_GRID_SATURATION = 0.075;
     private static final double BRIGHTNESS_HOVER = 0.25;
     private static final double BRIGHTNESS_MOUSE_HOVER = 0.15;
+    public static final Color DIM_COLOR = new Color(32, 32,32, 192);
 
     // FIELDS
     /** The number that controls the brightness of this tile from -1.0 (black) to 1.0 (white) **/
     private Number brightness;
     /** The number that controls the saturation of this tile from -1.0 (grey) to 1.0 (fully saturated). **/
     private Number saturation;
+    /** Number that dims this tile when other tiles are focused on. 0.0 (not dim) to 1.0 (fully dimmed). **/
+    private Number dimness;
 
     /** If this tile is currently hovered over by cursor. **/
     private boolean isHovered;
@@ -107,6 +111,12 @@ public abstract class ResponsiveTile implements Tile {
     }
     public void setSaturation(Number saturation) {
         this.saturation = saturation;
+    }
+    public Number getDimness() {
+        return dimness;
+    }
+    public void setDimness(Number dimness) {
+        this.dimness = dimness;
     }
 
     public boolean isHovered() {

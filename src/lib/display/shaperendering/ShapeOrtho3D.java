@@ -1,11 +1,8 @@
 package lib.display.shaperendering;
 
-import lib.GeometryTile;
-import lib.ResponsiveTile;
-import lib.panels.BattlePanel;
+import lib.gameplay.tiletypes.GeometryTile;
 
 import java.awt.*;
-import java.util.Arrays;
 
 import static lib.panels.BattlePanel.*;
 

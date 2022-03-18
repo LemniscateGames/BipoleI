@@ -1,8 +1,10 @@
-package lib;
+package lib.gameplay.tiletypes;
 
+import lib.Map;
+import lib.Team;
+import lib.gameplay.tiletypes.ResponsiveTile;
 import lib.panels.BattlePanel;
 import lib.ui.ElementBox;
-import lib.ui.TileInfoElementBox;
 import lib.units.EmptyLand;
 
 import javax.swing.*;

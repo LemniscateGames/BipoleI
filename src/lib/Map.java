@@ -1,5 +1,7 @@
 package lib;
 
+import lib.gameplay.tiletypes.ClaimedTile;
+
 public class Map {
     private final Tile[][] tiles;
 

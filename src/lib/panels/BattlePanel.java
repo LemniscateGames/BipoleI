@@ -3,6 +3,8 @@ package lib.panels;
 import lib.*;
 import lib.display.AnimatedValue;
 import lib.display.effects.Effect;
+import lib.gameplay.tiletypes.ClaimedTile;
+import lib.gameplay.tiletypes.ContestedTile;
 import lib.misc.RowColPoint;
 import lib.shop.Buyable;
 import lib.shop.Shop;

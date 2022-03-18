@@ -1,6 +1,9 @@
-package lib;
+package lib.gameplay.tiletypes;
 
+import lib.Map;
+import lib.Team;
 import lib.display.shaperendering.ShapeOrtho3D;
+import lib.gameplay.tiletypes.GeometryTile;
 import lib.panels.BattlePanel;
 import lib.ui.TileInfoElementBox;
 
@@ -49,16 +52,16 @@ public abstract class ClaimedTile extends GeometryTile {
 
     @Override
     public Color getColor() {
-        return team.getColor(getBrightness().doubleValue(), getSaturation().doubleValue());
+        return team.getColor(getBrightness().doubleValue(), getSaturation().doubleValue(), getDimness().doubleValue());
     }
 
     @Override
     public Color getTileColor(){
-        return team.getColor(getGridBrightness().doubleValue(), getGridBrightness().doubleValue());
+        return team.getColor(getGridBrightness().doubleValue(), getGridBrightness().doubleValue(), getDimness().doubleValue());
     }
 
     public Color getTileFillColor(){
-        return team.getTileFillColor(getGridBrightness().doubleValue()*.3, getGridBrightness().doubleValue()*.3);
+        return team.getTileFillColor(getGridBrightness().doubleValue()*.3, getGridBrightness().doubleValue()*.3, getDimness().doubleValue());
     }
 
     @Override

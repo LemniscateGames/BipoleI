@@ -1,5 +1,6 @@
 package lib;
 
+import lib.gameplay.tiletypes.ResponsiveTile;
 import lib.shop.ShopItem;
 import lib.ui.ElementBox;
 
@@ -42,15 +43,21 @@ public class Team {
         }
     }
 
+    public Color getColor(double brightness, double saturation, double dimness){
+        return generateColor(brightness, saturation, dimness, color);
+    }
     public Color getColor(double brightness, double saturation){
-        return generateColor(brightness, saturation, color);
+        return generateColor(brightness, saturation, 0, color);
     }
 
+    public Color getTileFillColor(double brightness, double saturation, double dimness) {
+        return generateColor(brightness, saturation, dimness, tileFillColor);
+    }
     public Color getTileFillColor(double brightness, double saturation) {
-        return generateColor(brightness, saturation, tileFillColor);
+        return generateColor(brightness, saturation, 0, tileFillColor);
     }
 
-    private Color generateColor(double brightness, double saturation, Color color) {
+    private Color generateColor(double brightness, double saturation, double dimness, Color color) {
         Color newColor = new Color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
 
         if (brightness > 0){
@@ -63,6 +70,10 @@ public class Team {
             newColor = blendColors(newColor, Color.YELLOW, saturation);
         } else if (saturation < 0){
             newColor = blendColors(newColor, Color.DARK_GRAY, -saturation);
+        }
+
+        if (dimness > 0){
+            newColor = blendColors(newColor, ResponsiveTile.DIM_COLOR, dimness);
         }
 
         return newColor;
