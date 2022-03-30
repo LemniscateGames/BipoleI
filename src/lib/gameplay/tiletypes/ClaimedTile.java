@@ -3,7 +3,6 @@ package lib.gameplay.tiletypes;
 import lib.Map;
 import lib.Team;
 import lib.display.shaperendering.ShapeOrtho3D;
-import lib.gameplay.tiletypes.GeometryTile;
 import lib.panels.BattlePanel;
 import lib.ui.TileInfoElementBox;
 
@@ -12,6 +11,8 @@ import java.awt.*;
 public abstract class ClaimedTile extends GeometryTile {
     /** The team that claimed this tile. **/
     private final Team team;
+    /** The team to draw the base of this tile as. May be different than the actual internal team. (Long story short, I dodnt want to recode a bunch of stuff) **/
+    private Team displayBaseTeam;
     /** The map this unit is placed on. Set when onPlace() is called. **/
     private Map map;
     /** This tile's row on the map it is placed on. **/
@@ -21,10 +22,12 @@ public abstract class ClaimedTile extends GeometryTile {
 
     public ClaimedTile(){
         this.team = null;
+        this.displayBaseTeam = null;
     }
     public ClaimedTile(Team team, ShapeOrtho3D... shapes){
         super(shapes);
         this.team = team;
+        this.displayBaseTeam = team;
     }
 
     @Override
@@ -36,7 +39,7 @@ public abstract class ClaimedTile extends GeometryTile {
 
     @Override
     public void drawTileBase(Graphics g, double x, double y, double z) {
-        BattlePanel.drawTile(g, x, y, z, getTileColor(), getTileFillColor());
+        if (displayBaseTeam != null) BattlePanel.drawTile(g, x, y, z, getDisplayTileColor(), getDisplayTileFillColor());
     }
 
     @Override
@@ -47,7 +50,7 @@ public abstract class ClaimedTile extends GeometryTile {
 
     @Override
     public boolean hasBorder() {
-        return true;
+        return displayBaseTeam != null;
     }
 
     @Override
@@ -59,9 +62,15 @@ public abstract class ClaimedTile extends GeometryTile {
     public Color getTileColor(){
         return team.getColor(getGridBrightness().doubleValue(), getGridBrightness().doubleValue(), getDimness().doubleValue());
     }
+    public Color getDisplayTileColor(){
+        return displayBaseTeam.getColor(getGridBrightness().doubleValue(), getGridBrightness().doubleValue(), getDimness().doubleValue());
+    }
 
     public Color getTileFillColor(){
         return team.getTileFillColor(getGridBrightness().doubleValue()*.3, getGridBrightness().doubleValue()*.3, getDimness().doubleValue());
+    }
+    public Color getDisplayTileFillColor(){
+        return displayBaseTeam.getTileFillColor(getGridBrightness().doubleValue()*.3, getGridBrightness().doubleValue()*.3, getDimness().doubleValue());
     }
 
     @Override
@@ -106,5 +115,11 @@ public abstract class ClaimedTile extends GeometryTile {
     }
     public int getColumn() {
         return column;
+    }
+    public Team getDisplayBaseTeam() {
+        return displayBaseTeam;
+    }
+    public void setDisplayBaseTeam(Team displayBaseTeam) {
+        this.displayBaseTeam = displayBaseTeam;
     }
 }

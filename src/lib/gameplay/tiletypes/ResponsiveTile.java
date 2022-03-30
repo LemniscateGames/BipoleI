@@ -20,6 +20,7 @@ public abstract class ResponsiveTile implements Tile {
     private static final double BRIGHTNESS_HOVER = 0.25;
     private static final double BRIGHTNESS_MOUSE_HOVER = 0.15;
     public static final Color DIM_COLOR = new Color(32, 32,32, 192);
+    public static final Color LIGHT_COLOR = new Color(250, 250,220, 192);
 
     // FIELDS
     /** The number that controls the brightness of this tile from -1.0 (black) to 1.0 (white) **/
@@ -28,6 +29,8 @@ public abstract class ResponsiveTile implements Tile {
     private Number saturation;
     /** Number that dims this tile when other tiles are focused on. 0.0 (not dim) to 1.0 (fully dimmed). **/
     private Number dimness;
+    /** Whether or not to draw this tile's base after other tiles. **/
+    private boolean baseDrawPriority;
 
     /** If this tile is currently hovered over by cursor. **/
     private boolean isHovered;
@@ -42,6 +45,7 @@ public abstract class ResponsiveTile implements Tile {
     public ResponsiveTile() {
         this.brightness = 0.0;
         this.saturation = 0.0;
+        this.dimness = 0.0;
     }
 
     public void updateBrightness(){
@@ -117,6 +121,14 @@ public abstract class ResponsiveTile implements Tile {
     }
     public void setDimness(Number dimness) {
         this.dimness = dimness;
+    }
+
+    public boolean isBaseDrawPriority() {
+        return baseDrawPriority;
+    }
+
+    public void setBaseDrawPriority(boolean baseDrawPriority) {
+        this.baseDrawPriority = baseDrawPriority;
     }
 
     public boolean isHovered() {

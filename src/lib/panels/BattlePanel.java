@@ -2,9 +2,13 @@ package lib.panels;
 
 import lib.*;
 import lib.display.AnimatedValue;
+import lib.display.ColorUtils;
 import lib.display.effects.Effect;
+import lib.gameplay.clusters.AttackFilter;
+import lib.gameplay.clusters.TileCluster;
 import lib.gameplay.tiletypes.ClaimedTile;
 import lib.gameplay.tiletypes.ContestedTile;
+import lib.gameplay.tiletypes.ResponsiveTile;
 import lib.misc.RowColPoint;
 import lib.shop.Buyable;
 import lib.shop.Shop;
@@ -37,6 +41,10 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     public static final double COL_Y_OFFSET = 0.5;
     public static final double HEIGHT_Y_OFFSET = -1.15;
     public static final Color GRID_COLOR = new Color(240, 240, 240);
+    public static final Color DIM_GRID_COLOR = ColorUtils.blendColors(GRID_COLOR, ResponsiveTile.DIM_COLOR, 0.5);
+    public static final Color ATTACK_RANGE_COLOR = new Color(192, 0, 0, 128);
+    public static final Color ATTACK_RANGE_GRID_COLOR = new Color(192, 0, 0, 32);
+    public static final Color CURSOR_FAIL_COLOR = new Color(224, 60, 48);
 
     // UI
     public static final Color BAR_BG_COLOR = new Color(30, 30, 30, 200);
@@ -61,6 +69,10 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     private int mouseShopItem = 0;
     private int infoItemSelected = 0;
 
+    private Unit movingUnit;
+    private TileCluster moveArea;
+    private TileCluster attackArea;
+
     // Controls
     private Point clickPoint;
     private double clickCameraRowPos, clickCameraColPos;
@@ -69,8 +81,15 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     }
     private ControlMode mode;
 
+    public enum MapControlMode {
+        SELECT, MOVE
+    }
+    private MapControlMode mapMode;
+
     // Effects
-    private ArrayList<Effect> effects;
+    private final ArrayList<Effect> effects;
+    /** Tiles within this area will be dimmed if this is not null. **/
+    private TileCluster dimArea;
 
     // UI Elements
     private final PointCounterElementBox pointCounter;
@@ -115,6 +134,7 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
 
         // ---- Controls
         mode = ControlMode.MAP_CURSOR;
+        mapMode = MapControlMode.SELECT;
 
         // mouse
         super.addMouseListener(this);
@@ -146,7 +166,6 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         super.setBackground(new Color(16,16,16));
 
         // ---- Link up units to this panel
-
         for (int r=0; r<battle.getMap().numRows(); r++){
             for (int c=0; c<battle.getMap().numCols(); c++){
                 Tile tile = battle.getMap().getTile(r, c);
@@ -187,9 +206,15 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
 
         // ==== Draw white map grid
         // Draw west and north side of all tiles
-        g.setColor(GRID_COLOR);
         for (int r=0; r<numRows; r++){
             for (int c=0; c<numCols; c++){
+                if (moveArea == null){
+                    g.setColor(GRID_COLOR);
+                } else {
+//                    g.setColor(moveArea.containsPoint(r, c) ? GRID_COLOR : DIM_GRID_COLOR);
+                    g.setColor(DIM_GRID_COLOR);
+                }
+
                 // Draw west side of tile
                 if (map.noBorderedTile(r, c) && map.noBorderedTile(r, c-1)){
                     g.drawLine(getScreenIntX(r, c), getScreenIntY(r, c),
@@ -208,6 +233,12 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         // Draw east borders of easternmost tiles
         for (int r=0; r<numRows; r++){
             if (map.noBorderedTile(r, numCols-1)){
+                if (moveArea == null){
+                    g.setColor(GRID_COLOR);
+                } else {
+//                    g.setColor(moveArea.containsPoint(r, numCols-1) ? GRID_COLOR : DIM_GRID_COLOR);
+                    g.setColor(DIM_GRID_COLOR);
+                }
                 g.drawLine(getScreenIntX(r, numCols), getScreenIntY(r, numCols),
                         getScreenIntX(r+1, numCols), getScreenIntY(r+1, numCols));
             }
@@ -216,20 +247,39 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         // Draw south borders of southernmost tiles
         for (int c=0; c<numCols; c++){
             if (map.noBorderedTile(numRows-1, c)){
+                if (moveArea == null){
+                    g.setColor(GRID_COLOR);
+                } else {
+//                    g.setColor(moveArea.containsPoint(numRows-1, c) ? GRID_COLOR : DIM_GRID_COLOR);
+                    g.setColor(DIM_GRID_COLOR);
+                }
                 g.drawLine(getScreenIntX(numRows, c), getScreenIntY(numRows, c),
                         getScreenIntX(numRows, c+1), getScreenIntY(numRows, c+1));
             }
         }
 
-        // ==== Draw all tile bases
+        // ==== Draw all tile bases, drawing priority ones later
         for (int r=0; r<numRows; r++){
             for (int c=0; c<numCols; c++){
                 Tile tile = map.getTile(r, c);
-                if (tile != null){
+                if (tile != null && !tile.isBaseDrawPriority()){
                     tile.drawTileBase(g, getScreenX(r, c), getScreenY(r, c), zoom.doubleValue());
                 }
             }
         }
+        for (int r=0; r<numRows; r++){
+            for (int c=0; c<numCols; c++){
+                Tile tile = map.getTile(r, c);
+                if (tile != null && tile.isBaseDrawPriority()){
+                    tile.drawTileBase(g, getScreenX(r, c), getScreenY(r, c), zoom.doubleValue());
+                }
+            }
+        }
+
+        // If in MOVE mode, draw the move and attack area
+        if (mapMode == MapControlMode.MOVE) drawCluster(g, moveArea, team.getPointColor(), team.getFillPointColor(), false, true);
+        if (attackArea != null) drawCluster(g, attackArea, ATTACK_RANGE_COLOR, ATTACK_RANGE_GRID_COLOR, false, true);
+
 
         // Draw behind unit effects and remove inactive effects
         for (int i=0; i<effects.size();){
@@ -282,7 +332,7 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
 
     // ==== FEATURES (static)
     /** Draw a tile. **/
-    public static void drawTile(Graphics g, double x, double y, double z, Color color, Color fillColor){
+    public static void drawTile(Graphics g, double x, double y, double z, Color color, Color fillColor, boolean border, boolean fill){
         int[] xPoints = {
                 (int)x,
                 (int)(x + ROW_X_OFFSET*z),
@@ -296,10 +346,17 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
                 (int)(y + COL_Y_OFFSET*z)
         };
 
-        g.setColor(fillColor);
-        g.fillPolygon(xPoints, yPoints, 4);
-        g.setColor(color);
-        g.drawPolygon(xPoints, yPoints, 4);
+        if (fill) {
+            g.setColor(fillColor);
+            g.fillPolygon(xPoints, yPoints, 4);
+        }
+        if (border) {
+            g.setColor(color);
+            g.drawPolygon(xPoints, yPoints, 4);
+        }
+    }
+    public static void drawTile(Graphics g, double x, double y, double z, Color color, Color fillColor){
+        drawTile(g, x, y, z, color, fillColor, true, true);
     }
 
     /** Draw an inset tile. **/
@@ -328,6 +385,50 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         drawInsetTile(g, x, y, z, inset, color, null);
     }
 
+
+    public void drawCluster(Graphics g, TileCluster cluster, Color color, Color fillColor, boolean border, boolean fill){
+        if (cluster == null) return;
+
+        for (RowColPoint point : cluster.getPoints()){
+            int r = point.row;
+            int c = point.col;
+
+            if (fill){
+                drawTile(g, getScreenIntX(r, c), getScreenIntY(r, c), zoom.doubleValue(), color, fillColor, false, true);
+            }
+
+            if (border){
+                g.setColor(color);
+                // West side
+                if (!cluster.containsPoint(r, c-1)) g.drawLine(getScreenIntX(r, c), getScreenIntY(r, c),
+                        getScreenIntX(r+1, c), getScreenIntY(r+1, c));
+                // East side
+                if (!cluster.containsPoint(r, c+1)) g.drawLine(getScreenIntX(r, c+1), getScreenIntY(r, c+1),
+                        getScreenIntX(r+1, c+1), getScreenIntY(r+1, c+1));
+
+                // North side
+                if (!cluster.containsPoint(r-1, c)) g.drawLine(getScreenIntX(r, c), getScreenIntY(r, c),
+                        getScreenIntX(r, c+1), getScreenIntY(r, c+1));
+                // South side
+                if (!cluster.containsPoint(r+1, c)) g.drawLine(getScreenIntX(r+1, c), getScreenIntY(r+1, c),
+                        getScreenIntX(r+1, c+1), getScreenIntY(r+1, c+1));
+            }
+        }
+    }
+    public void drawCluster(Graphics g, TileCluster cluster, Color color, Color fillColor){
+        drawCluster(g, cluster, color, fillColor, true, true);
+    }
+
+    public void displayCursorUnitAtkRange(){
+        if (mapMode == MapControlMode.MOVE) return;
+        Unit cursorUnit = cursorUnit();
+        if (cursorUnit == null) {
+            attackArea = null;
+        } else {
+            attackArea = TileCluster.generateCluster(new AttackFilter(cursorUnit), getBattleMap(),
+                    cursorUnit.getRange(), cursorUnit.getRow(), cursorUnit.getColumn());
+        }
+    }
 
     // =========== USER INTERFACE
     public static void drawBar(Graphics g, double x, double y, double z, double percent, Color fillColor){
@@ -609,6 +710,20 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         }
     }
 
+    public void changeMapModeTo(MapControlMode newMode){
+        if (mapMode == newMode) return;
+
+        if (mapMode == MapControlMode.MOVE) {
+            getBattleMap().clearMovingUnit();
+            moveArea = null;
+            attackArea = null;
+        }
+
+        mapMode = newMode;
+
+        System.out.println("changed map mode to "+mapMode);
+    }
+
     // ==== USER INTERACTION METHODS (called via controls)
     public void moveCursor(int row, int col){
         // Map cursor mode - move cursor in map
@@ -634,6 +749,7 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
                 if (newTile != null) newTile.onHover();
 
                 moveCameraToCursor();
+                displayCursorUnitAtkRange();
             }
         }
 
@@ -680,6 +796,7 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
             if (newTile != null) newTile.onHover();
 
             moveCameraToCursor();
+            displayCursorUnitAtkRange();
         }
 
         else if (mode == ControlMode.SHOP_CURSOR){
@@ -746,7 +863,11 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     // Called when Z is pressed.
     public void interact(){
         if (mode == ControlMode.MAP_CURSOR){
-            interactWithTile(mapCursorRow, mapCursorCol);
+            if (mapMode == MapControlMode.SELECT) {
+                interactWithTile(mapCursorRow, mapCursorCol);
+            } else if (mapMode == MapControlMode.MOVE){
+                moveMovingUnitTo(mapCursorRow, mapCursorCol);
+            }
         }
         else if (mode == ControlMode.SHOP_CURSOR){
             interactWithShopItem(shopCursorRow*Shop.COLS + shopCursorCol);
@@ -787,6 +908,32 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         }
     }
 
+    public void moveMovingUnitTo(int row, int col){
+        if (moveArea.containsPoint(row, col)){
+            int movedRow = movingUnit.getRow();
+            int movedCol = movingUnit.getColumn();
+
+            Tile moveToTile = getBattleMap().getTile(row, col);
+            Team movingUnitTeam = movingUnit.getLandTeam();
+            if (moveToTile instanceof EmptyLand) {
+                movingUnit.setLandTeam(((EmptyLand) moveToTile).getTeam());
+            } else {
+                movingUnit.setLandTeam(null);
+            }
+            getBattleMap().placeTile(movingUnit, row, col);
+
+            if (movingUnitTeam == null){
+                getBattleMap().placeTile(null, movedRow, movedCol);
+            } else {
+                getBattleMap().placeTile(new EmptyLand(movingUnitTeam), movedRow, movedCol);
+            }
+
+
+            changeMapModeTo(MapControlMode.SELECT);
+            movingUnit.restartActionCooldown();
+        }
+    }
+
     public void openContextForTile(int row, int col){
         Tile selectedTile = cursorTile();
 
@@ -823,8 +970,7 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         }
 
         else if (button instanceof MoveButton){
-            System.out.println("move pressed :)");
-            // TODO: move selected unit
+            moveCursorUnit();
         }
     }
 
@@ -840,10 +986,26 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
         }
     }
 
+    public void moveCursorUnit(){
+        movingUnit = cursorUnit();
+
+        moveArea = getBattleMap().setMovingUnit(movingUnit, movingUnit.getRow(), movingUnit.getColumn(), false);
+        attackArea = moveArea.extend(new AttackFilter(movingUnit), movingUnit.getRange());
+        attackArea.subtract(moveArea);
+        attackArea.removePoint(movingUnit.getRow(), movingUnit.getColumn());
+        moveArea.removePoint(movingUnit.getRow(), movingUnit.getColumn());
+
+        changeModeTo(ControlMode.MAP_CURSOR);
+        changeMapModeTo(MapControlMode.MOVE);
+    }
+
     // Called when X is pressed.
     public void cancel(){
         if (mode == ControlMode.SHOP_CURSOR || mode == ControlMode.INFO_CURSOR){
             changeModeTo(ControlMode.MAP_CURSOR);
+        }
+        else if (mode == ControlMode.MAP_CURSOR && mapMode == MapControlMode.MOVE){
+            changeMapModeTo(MapControlMode.SELECT);
         }
     }
 
@@ -851,7 +1013,7 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     public void context(){
         if (mode == ControlMode.MAP_CURSOR){
             Tile selectedTile = cursorTile();
-            if (selectedTile.isControllable(team)){
+            if (selectedTile != null && selectedTile.isControllable(team)){
                 changeModeTo(ControlMode.INFO_CURSOR);
             }
         }
@@ -884,6 +1046,10 @@ public class BattlePanel extends ElementPanel implements MouseInputListener, Mou
     }
 
     // ======== Accessors
+    public Map getBattleMap(){
+        return battle.getMap();
+    }
+
     public ControlMode getMode() {
         return mode;
     }

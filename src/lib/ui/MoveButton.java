@@ -12,7 +12,7 @@ public class MoveButton extends InfoButton {
     @Override
     public boolean isEnabled() {
         return getInfoBox().getDisplayedTile() instanceof Unit
-                && ((Unit) getInfoBox().getDisplayedTile()).isActable();
+                && ((Unit) getInfoBox().getDisplayedTile()).canMove();
     }
 
     @Override

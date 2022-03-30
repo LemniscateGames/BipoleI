@@ -37,7 +37,7 @@ public class Castle extends Unit {
         setValue(500);
         setHp(25);
         setAtk(5);
-        setDelay(3000);
+        setDelay(4000);
 
         setSellable(false);
         setActable(false);

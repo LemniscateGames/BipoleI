@@ -4,6 +4,8 @@ import java.awt.*;
 
 public class ColorUtils {
     public static Color blendColors(Color base, Color blend, double percent){
+        if (percent == 0) return base;
+        if (percent == 1) return blend;
         return new Color(
                 (int)(base.getRed() + (blend.getRed() - base.getRed())*percent),
                 (int)(base.getGreen() + (blend.getGreen() - base.getGreen())*percent),

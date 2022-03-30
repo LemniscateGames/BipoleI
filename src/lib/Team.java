@@ -11,10 +11,10 @@ import static lib.display.ColorUtils.makeTransparent;
 
 public class Team {
     // Core colors
-    private Color color, unitColor, pointColor;
+    private final Color color, unitColor, pointColor;
 
     // Colors generated during initialization that are related to core colors
-    private Color tileFillColor, fadedPointColor, darkPointColor, darkFadedPointColor;
+    private final Color tileFillColor, fadedPointColor, darkPointColor, darkFadedPointColor, fillPointColor;
 
     /** The amount of points this team has. **/
     private int points = 5;
@@ -28,6 +28,7 @@ public class Team {
         fadedPointColor = blendColors(pointColor, Color.GRAY, 0.5);
         darkPointColor = blendColors(pointColor, ElementBox.UI_BORDER_COLOR, 0.5);
         darkFadedPointColor = blendColors(darkPointColor, ElementBox.UI_BORDER_COLOR_LIGHTER, 0.5);
+        fillPointColor = makeTransparent(pointColor, 0.2);
     }
 
     // Interaction
@@ -74,6 +75,8 @@ public class Team {
 
         if (dimness > 0){
             newColor = blendColors(newColor, ResponsiveTile.DIM_COLOR, dimness);
+        } else if (dimness < 0){
+            newColor = blendColors(newColor, ResponsiveTile.LIGHT_COLOR, -dimness);
         }
 
         return newColor;
@@ -119,6 +122,10 @@ public class Team {
 
     public Color getDarkFadedPointColor() {
         return darkFadedPointColor;
+    }
+
+    public Color getFillPointColor() {
+        return fillPointColor;
     }
 
     public int getPoints() {

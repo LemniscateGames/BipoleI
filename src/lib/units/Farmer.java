@@ -21,10 +21,10 @@ public class Farmer extends Unit {
 
     @Override
     public void initialize() {
-        setValue(5);
+        setValue(4);
         setHp(1);
         setAtk(0);
-        setDelay(12000);
+        setDelay(20000);
 
         setActable(false);
         setAutoAct(true);

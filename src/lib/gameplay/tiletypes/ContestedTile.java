@@ -108,7 +108,7 @@ public class ContestedTile extends ResponsiveTile {
 
     @Override
     public Color getTileColor(){
-        return team.getColor(getGridBrightness().doubleValue(), getGridBrightness().doubleValue());
+        return team.getColor(getGridBrightness().doubleValue(), getGridBrightness().doubleValue(), getDimness().doubleValue());
     }
 
     @Override
@@ -117,7 +117,7 @@ public class ContestedTile extends ResponsiveTile {
     }
 
     public Color getTileFillColor(){
-        return team.getTileFillColor(getGridBrightness().doubleValue()*.3, getGridBrightness().doubleValue()*.3);
+        return team.getTileFillColor(getGridBrightness().doubleValue()*.3, getGridBrightness().doubleValue()*.3, getDimness().doubleValue()*.3);
     }
 
     @Override

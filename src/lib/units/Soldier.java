@@ -4,8 +4,6 @@ import lib.Team;
 import lib.Unit;
 import lib.display.shaperendering.shapes.RectangularPrism;
 
-import java.awt.*;
-
 public class Soldier extends Unit {
     public Soldier(Team team) {
         super(team);
@@ -27,6 +25,8 @@ public class Soldier extends Unit {
         setHp(5);
         setAtk(3);
         setDelay(7500);
+        setSpeed(2);
+        setRange(1);
 
         addShape(new RectangularPrism(0.3, 0.3, 0.32));
     }

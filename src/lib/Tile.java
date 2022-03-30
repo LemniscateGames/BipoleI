@@ -58,4 +58,7 @@ public interface Tile {
 
     /** Initialize when being added to a BattlePanel so that effects can be automatically called. **/
     default void setPanel(BattlePanel panel){};
+
+    /** Whether or not to draw this tile's base before others. **/
+    boolean isBaseDrawPriority();
 }

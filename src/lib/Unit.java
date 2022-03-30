@@ -34,14 +34,22 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     private int atk;
     /** Amount of milliseconds before this unit becomes ready. **/
     private int delay;
+    /** Amount of tiles away this unit can attack. **/
+    private int range = 1;
+    /** Amount of tiles this unit can move. **/
+    private int speed = 1;
 
     // ======== Configuration
-    /** If this unit can attack. **/
+    /** If this unit can attack/move (act). **/
     private boolean actable = true;
     /** If this unit can be sold. Typically set at initialization with setBuyable(), only really used by castle as of now. **/
     private boolean sellable = true;
     /** If this unit automatically acts when it is ready. **/
     private boolean autoAct = false;
+    /** If this unnit can only move on claimed tiles. **/
+    private boolean claimedLandOnly = false;
+    /** If this unit can move off allied land, this is the team of the land that it is on. **/
+    private Team landTeam;
 
     // ======== Timing/Readiness
     /** Time (in millis/system time) when this unit began becoming ready. Used in display and for readiness calculation if timers are not used. **/
@@ -49,9 +57,9 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     /** The timer that controls when this unit is ready when on internal timer mode. **/
     private Timer readyTimer;
     /** If this unit is ready to act or not. Set to true when the readiness timer expires. **/
-    private boolean isReady;
+    private boolean ready;
 
-    /** The panel that this unit was placed on. Saved when place effect is called, saved to send FLoatingText effects to. **/
+    /** The panel that this unit was placed on. Saved when place effect is called, saved to send FloatingText effects to. **/
     private BattlePanel panel;
 
     // ==== Effects
@@ -63,6 +71,7 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     }
     public Unit(Team team) {
         super(team);
+        setLandTeam(team);
         initialize();
     }
 
@@ -84,7 +93,7 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     public void onPlace(Map map, int r, int c) {
         super.onPlace(map, r, c);
         if (actable || autoAct){
-            isReady = false;
+            ready = false;
             setSaturation(UNREADY_SATURATION);
 
             ActionListener onReadyAction = evt -> onReady();
@@ -122,9 +131,20 @@ public abstract class Unit extends ClaimedTile implements Buyable {
             autoAct();
             startTime = System.currentTimeMillis();
         } else {
-            isReady = true;
+            ready = true;
             setSaturation(0.0);
         }
+    }
+
+    /** Restart the timer for becoming ready. **/
+    public void restartActionCooldown(){
+        ready = false;
+        startTime = System.currentTimeMillis();
+        readyTimer.restart();
+    }
+
+    public boolean canMove(){
+        return isReady();
     }
 
     // ======== Actions
@@ -145,7 +165,7 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     // ======== UI
     @Override
     public void drawUI(Graphics g, double x, double y, double z) {
-        if ((actable || autoAct) && !isReady){
+        if ((actable || autoAct) && !ready){
             BattlePanel.drawBar(g, x, y, z, readinessPercent(), READINESS_COLOR);
         }
     }
@@ -220,6 +240,18 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     public void setDelay(int delay) {
         this.delay = delay;
     }
+    public int getSpeed() {
+        return speed;
+    }
+    public void setSpeed(int speed) {
+        this.speed = speed;
+    }
+    public int getRange() {
+        return range;
+    }
+    public void setRange(int range) {
+        this.range = range;
+    }
     public long getStartTime() {
         return startTime;
     }
@@ -243,6 +275,26 @@ public abstract class Unit extends ClaimedTile implements Buyable {
     }
     public void setAutoAct(boolean value){
         autoAct = value;
+    }
+    public boolean isClaimedLandOnly() {
+        return claimedLandOnly;
+    }
+    public void setClaimedLandOnly(boolean claimedLandOnly) {
+        this.claimedLandOnly = claimedLandOnly;
+    }
+    public Team getLandTeam() {
+        return landTeam;
+    }
+    public void setLandTeam(Team landTeam) {
+        this.landTeam = landTeam;
+        setDisplayBaseTeam(landTeam);
+    }
+
+    public boolean isReady() {
+        return ready;
+    }
+    public void setReady(boolean ready) {
+        this.ready = ready;
     }
 
     @Override
